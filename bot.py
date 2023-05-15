@@ -16,7 +16,7 @@ intents = discord.Intents.default()
 # intents.messages = True
 
 # turn off messages from guilds, so you only get messages from DM channels
-intents.guild_messages = False
+# intents.guild_messages = False
 intents.message_content = True
 
 
@@ -180,6 +180,9 @@ class ChatBot(discord.Client):
             await message.channel.send("Not a valid commmand.")
 
     async def on_message(self, message):
+        # Check if a message is a DM
+        # if isinstance(message.channel, discord.channel.DMChannel):
+
         if message.author == self.user:
             return
 
