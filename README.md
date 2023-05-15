@@ -14,6 +14,10 @@ You are an AI research assistant and an expert in all fields of science.
 - Reference relevant patents.
 - First think step-by-step - describe your plan written out in great detail.
 
+### Prompt Engineering with GPT-4
+
+The GPT_4_Biologist_ChatBot folder contains experiments to develop suitable system/assistant prompts for the discord bot to act as an AI Scientist Researcher.
+
 ### Commands
 
 - !help --> description of bot and commands.
