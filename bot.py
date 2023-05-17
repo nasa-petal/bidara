@@ -35,9 +35,9 @@ class ChatBot(discord.Client):
         # TODO
         # !examples
         self.instructions = "".join(["Welcome to BIDARA, a Bio-Inspired Design and Research Assistant AI chatbot that uses OpenAI’s GPT-4 model to respond to queries.\n",
-                                     "As you chat back and forth either through DMs or in #chat-with-bidara, BIDARA keeps track of all the messages between you and it as part of your unique conversation history.\n",
-                                     "This allows it to respond to new queries based on the context of your conversation. Eventually your conversation will need to be cleared or OpenAI will not be able to generate new responses.\n",
-                                     "To clear the conversation, and start a new one, use the `!clear_conv` command.\n",
+                                     "As you chat back and forth either through DMs or in #chat-with-bidara, BIDARA keeps track of all the messages between you and it as part of your unique conversation history. ",
+                                     "This allows it to respond to new queries based on the context of your conversation. Eventually your conversation will need to be cleared or OpenAI will not be able to generate new responses. ",
+                                     "To clear the conversation, and start a new one, use the `!clear_conv` command.\n\n",
                                      "BIDARA can be directed to respond in certain ways, by using GPT-4’s system prompt. By default the system prompt BIDARA uses allows it to respond in ways helpful for bio-inspired design and research assistant activities.\n\n",
                                      "**Do not share any sensitive information** in your conversations including but not limited to, personal information, ITAR, CUI, export controlled, or trade secrets.\n",
                                      "While OpenAI has safeguards in place, the chatbot may occasionally generate incorrect or misleading information and produce offensive or biased content.\n",
