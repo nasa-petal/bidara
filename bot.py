@@ -38,18 +38,18 @@ class ChatBot(discord.Client):
                                      "As you chat back and forth either through DMs or in #chat-with-bidara, BIDARA keeps track of all the messages between you and it as part of your unique conversation history.\n",
                                      "This allows it to respond to new queries based on the context of your conversation. Eventually your conversation will need to be cleared or OpenAI will not be able to generate new responses.\n",
                                      "To clear the conversation, and start a new one, use the `!clear_conv` command.\n",
-                                     "BIDARA can be directed to respond in certain ways, by using GPT-4’s system prompt. By default the system prompt BIDARA uses allows it to respond in ways helpful for bio-inspired design and research assistant activities.\n\n”,
-                                     "**Do not share any sensitive information** in your conversations including but not limited to, personal information, ITAR, CUI, export controlled, or trade secrets.\n"
-                                     "While OpenAI has safeguards in place, the chatbot may occasionally generate incorrect or misleading information and produce offensive or biased content.\n"
-                                     "The chatbot may produce inaccurate information about people, places, or facts. It is not intended to give advice. Conversations may be reviewed by OpenAI's AI trainers to improve their systems.\n\n"
+                                     "BIDARA can be directed to respond in certain ways, by using GPT-4’s system prompt. By default the system prompt BIDARA uses allows it to respond in ways helpful for bio-inspired design and research assistant activities.\n\n",
+                                     "**Do not share any sensitive information** in your conversations including but not limited to, personal information, ITAR, CUI, export controlled, or trade secrets.\n",
+                                     "While OpenAI has safeguards in place, the chatbot may occasionally generate incorrect or misleading information and produce offensive or biased content.\n",
+                                     "The chatbot may produce inaccurate information about people, places, or facts. It is not intended to give advice. Conversations may be reviewed by OpenAI's AI trainers to improve their systems.\n\n",
                                      "Here are the in-built commands:\n",
                                      "`!help` - description of bot and commands.\n",
-                                     "`!examples` - examples of conversations with BIDARA.\n"
+                                     "`!examples` - examples of conversations with BIDARA.\n",
                                      "`!system` - lists your current system prompt.\n",
-                                     "`!set_default_sys` - set your system prompt to the default BIDARA prompt.\n"
-                                     "`!set_custom_sys` - set a custom system prompt.\n"
+                                     "`!set_default_sys` - set your system prompt to the default BIDARA prompt.\n",
+                                     "`!set_custom_sys` - set a custom system prompt.\n",
                                      "`!clear_sys` - clear your current system prompt.\n",
-                                     "`!curr_conv` - shows your current conversation.\n"
+                                     "`!curr_conv` - shows your current conversation.\n",
                                      "`!clear_conv` - clear your current conversation.\n",
                                      "\n\n"])
 
