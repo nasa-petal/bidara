@@ -205,20 +205,23 @@ class ChatBot(discord.Client):
         self.get_chatgpt_messages(input_content, message.author)
 
         async with message.channel.typing():
-            response = await self.call_openai(self.conversations[message.author])
-            assistant_response = response['choices'][0]['message']['content']
-
-            self.conversations[message.author].append(
-                {'role': 'assistant', 'content': assistant_response})
-
-            chunk_length = 2000
-            if len(assistant_response) > chunk_length:
-
-                await message.channel.send("Sorry for the wait, OpenAI response is large.\n Response greater than 2000 characters, sending response in chunks.\n")
-                await self.send_chunks(assistant_response, chunk_length, message)
+            try:
+                response = await self.call_openai(self.conversations[message.author])
+            except:
+                await message.channel.send("OpenAI experienced an error generating a response. Probably because it is currently overloaded with other requests. You can retry your request again after a short wait.")
             else:
-                await message.channel.send(assistant_response)
+                assistant_response = response['choices'][0]['message']['content']
 
+                self.conversations[message.author].append(
+                    {'role': 'assistant', 'content': assistant_response})
 
+                chunk_length = 2000
+                if len(assistant_response) > chunk_length:
+
+                    await message.channel.send("Sorry for the wait, OpenAI response is large.\n Response greater than 2000 characters, sending response in chunks.\n")
+                    await self.send_chunks(assistant_response, chunk_length, message)
+                else:
+                    await message.channel.send(assistant_response)
+                
 client = ChatBot(intents=intents)
 client.run(DISCORD_TOKEN)
