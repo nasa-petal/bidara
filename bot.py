@@ -75,11 +75,10 @@ class ChatBot(discord.Client):
     def get_chatgpt_messages(self, input_content, author):
         messages = self.conversations[author]
 
-        if author in self.system_prompt_dict:
-            sys_prompt = {'role': 'system',
+        if author not in self.system_prompt_dict:
+            self.system_prompt_dict[author] = self.default_sys
+        sys_prompt = {'role': 'system',
                           'content': self.system_prompt_dict[author]}
-        else:
-            sys_prompt = {'role': 'system', 'content': self.default_sys}
 
         if messages == []:
             messages.append(sys_prompt)
@@ -116,9 +115,8 @@ class ChatBot(discord.Client):
 
     async def process_system_prompt(self, message):
         if message.author not in self.system_prompt_dict:
-            await message.channel.send((f"This is your current system prompt:\n>>> {self.default_sys}"))
-        else:
-            await message.channel.send((f"This is your current system prompt:\n>>> {self.system_prompt_dict[message.author]}"))
+            self.system_prompt_dict[message.author] = self.default_sys
+        await message.channel.send((f"This is your current system prompt:\n>>> {self.system_prompt_dict[message.author]}"))
 
     async def set_system_prompt(self, prompt_choice, message):
         if prompt_choice == "default":
@@ -163,9 +161,8 @@ class ChatBot(discord.Client):
             prompt_choice = keyword.split("_")[1]
             await self.set_system_prompt(prompt_choice, message)
         elif keyword == "clear_sys":
-            if message.author in self.system_prompt_dict:
-                self.system_prompt_dict[message.author] = ""
-                await message.channel.send("Your system prompt for Chat-GPT is cleared.")
+            self.system_prompt_dict[message.author] = ""
+            await message.channel.send("Your system prompt for Chat-GPT is cleared.")
         elif keyword == "curr_conv":
             await self.list_conv(message)
         elif keyword == "clear_conv":
