@@ -44,12 +44,12 @@ class ChatBot(discord.Client):
                                      "Here are the in-built commands:\n",
                                      "`!help` - description of bot and commands.\n",
                                      "`!examples` - examples of conversations with BIDARA.\n"
-                                     "`!system` - lists the current system prompt, if any.\n",
-                                     "`!set_default_sys` - set the system prompt to the default biomimicry prompt.\n"
+                                     "`!system` - lists your current system prompt.\n",
+                                     "`!set_default_sys` - set your system prompt to the default BIDARA prompt.\n"
                                      "`!set_custom_sys` - set a custom system prompt.\n"
-                                     "`!clear_sys` - clear the current system prompt.\n",
+                                     "`!clear_sys` - clear your current system prompt.\n",
                                      "`!curr_conv` - shows your current conversation.\n"
-                                     "`!clear_conv` - clear the current conversation.\n",
+                                     "`!clear_conv` - clear your current conversation.\n",
                                      "\n\n"])
 
         self.example = "".join(["system: "+self.default_sys + "\n\n",
@@ -79,7 +79,7 @@ class ChatBot(discord.Client):
             sys_prompt = {'role': 'system',
                           'content': self.system_prompt_dict[author]}
         else:
-            sys_prompt = {'role': 'system', 'content': ""}
+            sys_prompt = {'role': 'system', 'content': self.default_sys}
 
         if messages == []:
             messages.append(sys_prompt)
@@ -116,12 +116,7 @@ class ChatBot(discord.Client):
 
     async def process_system_prompt(self, message):
         if message.author not in self.system_prompt_dict:
-            self.system_prompt_dict[message.author] = ""
-
-            await message.channel.send("It seems you haven't set a system prompt yet for ChatGPT.\nWould you like to set a custom one or use the default?\nThe default prompt is:\n")
-
-            await message.channel.send(">>> " + self.default_sys)
-            await message.channel.send("Please type `!set_custom_sys` or `!set_default_sys` to choose.")
+            await message.channel.send((f"This is your current system prompt:\n>>> {self.default_sys}"))
         else:
             await message.channel.send((f"This is your current system prompt:\n>>> {self.system_prompt_dict[message.author]}"))
 
@@ -208,7 +203,7 @@ class ChatBot(discord.Client):
             try:
                 response = await self.call_openai(self.conversations[message.author])
             except:
-                await message.channel.send("OpenAI experienced an error generating a response. Probably because it is currently overloaded with other requests. You can retry your request again after a short wait.")
+                await message.channel.send("OpenAI experienced an error generating a response. Maybe your conversation has grown too large, try `!clear_conv` to clear it, then try again. Or OpenAI may be currently overloaded with other requests. You can retry again after a short wait.")
             else:
                 assistant_response = response['choices'][0]['message']['content']
 
