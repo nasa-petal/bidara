@@ -44,7 +44,7 @@ class ChatBot(discord.Client):
                                      "The chatbot may produce inaccurate information about people, places, or facts. It is not intended to give advice. Conversations may be reviewed by OpenAI's AI trainers to improve their systems.\n\n",
                                      "Here are the in-built commands:\n",
                                      "`!help` - description of bot and commands.\n",
-                                     "`!examples` - examples of conversations with BIDARA.\n",
+                                     "`!example` - show an example conversation with BIDARA.\n",
                                      "`!system` - lists your current system prompt.\n",
                                      "`!set_default_sys` - set your system prompt to the default BIDARA prompt.\n",
                                      "`!set_custom_sys` - set a custom system prompt.\n",
