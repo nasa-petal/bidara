@@ -34,10 +34,11 @@ class ChatBot(discord.Client):
 
         # TODO
         # !examples
-        self.instructions = "".join(["Welcome to BIDARA, which stands for Bio-Inspired Design and Research Assistant.\n",
-                                     "BIDARA is a bot that utilizes GPT-4 to answer questions. Each question you ask will be redirected to Chat-GPT, and is part of a conversation with Chat-GPT.\n",
-                                     "To clear the conversation, and start a new one, use the clear_sys command.\n",
-                                     "There is also a system prompt that Chat-GPT can use, in which you can specify what you want Chat-GPT to act as. For example, a biology researcher.\n\n"
+        self.instructions = "".join(["Welcome to BIDARA, a Bio-Inspired Design and Research Assistant AI chatbot that uses OpenAI’s GPT-4 model to respond to queries.\n",
+                                     "As you chat back and forth either through DMs or in #chat-with-bidara, BIDARA keeps track of all the messages between you and it as part of your unique conversation history.\n",
+                                     "This allows it to respond to new queries based on the context of your conversation. Eventually your conversation will need to be cleared or OpenAI will not be able to generate new responses.\n",
+                                     "To clear the conversation, and start a new one, use the `!clear_conv` command.\n",
+                                     "BIDARA can be directed to respond in certain ways, by using GPT-4’s system prompt. By default the system prompt BIDARA uses allows it to respond in ways helpful for bio-inspired design and research assistant activities.\n\n”,
                                      "**Do not share any sensitive information** in your conversations including but not limited to, personal information, ITAR, CUI, export controlled, or trade secrets.\n"
                                      "While OpenAI has safeguards in place, the chatbot may occasionally generate incorrect or misleading information and produce offensive or biased content.\n"
                                      "The chatbot may produce inaccurate information about people, places, or facts. It is not intended to give advice. Conversations may be reviewed by OpenAI's AI trainers to improve their systems.\n\n"
@@ -65,7 +66,7 @@ class ChatBot(discord.Client):
                                 "6. Tortoise - its protective shell could inspire a car with enhanced safety features and a durable exterior.\n",
                                 "7. Electric eel - its ability to generate electricity could inspire a car with innovative energy generation and storage systems.\n",
                                 "8. Kangaroo - its powerful legs and efficient movement could inspire a car with advanced suspension and energy recovery systems.\n",
-                                "9. Hummingbird - its hovering and rapid directional changes could inspire a car with advanced maneuverability and stability control systems.\n"
+                                "9. Hummingbird - its hovering and rapid directional changes could inspire a car with advanced maneuverability and stability control systems.\n",
                                 "10. Spider - its lightweight and strong silk could inspire a car with advanced materials for weight reduction and structural strength.\n"])
         self.custom_sys = False
 
