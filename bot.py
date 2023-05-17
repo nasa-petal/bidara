@@ -42,14 +42,14 @@ class ChatBot(discord.Client):
                                      "While OpenAI has safeguards in place, the chatbot may occasionally generate incorrect or misleading information and produce offensive or biased content.\n"
                                      "The chatbot may produce inaccurate information about people, places, or facts. It is not intended to give advice. Conversations may be reviewed by OpenAI's AI trainers to improve their systems.\n\n"
                                      "Here are the in-built commands:\n",
-                                     "`!help` description of bot and commands.\n",
-                                     "`!examples` examples of conversations with BIDARA.\n"
-                                     "`!system` lists the current system prompt, if any.\n",
-                                     "`!set_default_sys` set the system prompt to the default biomimicry prompt.\n"
-                                     "`!set_custom_sys` set a custom system prompt.\n"
-                                     "`!clear_sys` clear the current system prompt.\n",
-                                     "`!curr_conv` shows your current conversation.\n"
-                                     "`!clear_conv` clear the current conversation.\n",
+                                     "`!help` - description of bot and commands.\n",
+                                     "`!examples` - examples of conversations with BIDARA.\n"
+                                     "`!system` - lists the current system prompt, if any.\n",
+                                     "`!set_default_sys` - set the system prompt to the default biomimicry prompt.\n"
+                                     "`!set_custom_sys` - set a custom system prompt.\n"
+                                     "`!clear_sys` - clear the current system prompt.\n",
+                                     "`!curr_conv` - shows your current conversation.\n"
+                                     "`!clear_conv` - clear the current conversation.\n",
                                      "\n\n"])
 
         self.example = "".join(["system: "+self.default_sys + "\n\n",
