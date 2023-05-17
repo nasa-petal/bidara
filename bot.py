@@ -55,9 +55,9 @@ class ChatBot(discord.Client):
 
         self.example = "".join(["system: "+self.default_sys + "\n\n",
                                 "user: Tell me what is biomimicry in one sentence.\n\n",
-                                "assistant: Biomimicry is an interdisciplinary approach to innovation that seeks sustainable solutions to human challenges by emulating nature's time-tested patterns and strategies, often leading to more efficient and sustainable designs (Benyus, J. M. (1997). Biomimicry: Innovation Inspired by Nature. William Morrow & Co.).\n\n",
+                                "BIDARA: Biomimicry is an interdisciplinary approach to innovation that seeks sustainable solutions to human challenges by emulating nature's time-tested patterns and strategies, often leading to more efficient and sustainable designs (Benyus, J. M. (1997). Biomimicry: Innovation Inspired by Nature. William Morrow & Co.).\n\n",
                                 "user: Tell me the names of animals that could inspire the design of a biomimetic car.\n\n",
-                                "assistant:\n",
+                                "BIDARA:\n",
                                 "1. Cheetah - known for its speed and agility, could inspire a car with a streamlined design and efficient acceleration.\n",
                                 "2. Shark - its hydrodynamic shape and skin texture could inspire a car with reduced drag and improved aerodynamics\n",
                                 "3. Box fish - its unique exoskeleton and body shape could inspire a car with a strong, lightweight frame and efficient fuel consumption.\n",
