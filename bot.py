@@ -123,12 +123,12 @@ class ChatBot(discord.Client):
             await message.channel.send(">>> " + self.default_sys)
             await message.channel.send("Please type `!set_custom_sys` or `!set_default_sys` to choose.")
         else:
-            await message.channel.send((f"This is the current system prompt:\n>>> {self.system_prompt_dict[message.author]}"))
+            await message.channel.send((f"This is your current system prompt:\n>>> {self.system_prompt_dict[message.author]}"))
 
     async def set_system_prompt(self, prompt_choice, message):
         if prompt_choice == "default":
             self.system_prompt_dict[message.author] = self.default_sys
-            await message.channel.send(f"The system prompt is set to:\n>>> {self.default_sys}\n\n")
+            await message.channel.send(f"Your system prompt is set to:\n>>> {self.default_sys}\n\n")
             await message.channel.send("If you would like to change or clear it, type `!set_custom_sys` or `!clear_sys`, respectively.")
         elif prompt_choice == "custom":
             self.custom_sys = True
@@ -145,7 +145,7 @@ class ChatBot(discord.Client):
                 return
 
             self.system_prompt_dict[message.author] = msg.content
-            await message.channel.send(f"The system prompt is set to:\n>>> {msg.content}")
+            await message.channel.send(f"Your system prompt is set to:\n>>> {msg.content}")
 
     async def list_conv(self, message):
         curr_conversation = self.conversations[message.author]
@@ -170,7 +170,7 @@ class ChatBot(discord.Client):
         elif keyword == "clear_sys":
             if message.author in self.system_prompt_dict:
                 self.system_prompt_dict[message.author] = ""
-                await message.channel.send("The system prompt for Chat-GPT is cleared.")
+                await message.channel.send("Your system prompt for Chat-GPT is cleared.")
         elif keyword == "curr_conv":
             await self.list_conv(message)
         elif keyword == "clear_conv":
