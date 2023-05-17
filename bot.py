@@ -38,15 +38,18 @@ class ChatBot(discord.Client):
                                      "BIDARA is a bot that utilizes GPT-4 to answer questions. Each question you ask will be redirected to Chat-GPT, and is part of a conversation with Chat-GPT.\n",
                                      "To clear the conversation, and start a new one, use the clear_sys command.\n",
                                      "There is also a system prompt that Chat-GPT can use, in which you can specify what you want Chat-GPT to act as. For example, a biology researcher.\n\n"
+                                     "**Do not share any sensitive information** in your conversations including but not limited to, personal information, ITAR, CUI, export controlled, or trade secrets.\n"
+                                     "While OpenAI has safeguards in place, the chatbot may occasionally generate incorrect or misleading information and produce offensive or biased content.\n"
+                                     "The chatbot may produce inaccurate information about people, places, or facts. It is not intended to give advice. Conversations may be reviewed by OpenAI's AI trainers to improve their systems.\n\n"
                                      "Here are the in-built commands:\n",
-                                     " - !help --> description of bot and commands.\n",
-                                     " - !examples --> examples of conversations with BIDARA.\n"
-                                     " - !system --> lists the current system prompt, if any.\n",
-                                     " - !set_default_sys --> set the system prompt to the default biomimicry prompt.\n"
-                                     " - !set_custom_sys --> set a custom system prompt.\n"
-                                     " - !clear_sys --> clear the current system prompt.\n",
-                                     " - !curr_conv --> shows your current conversation.\n"
-                                     " - !clear_conv --> clear the current conversation.\n",
+                                     " - `!help` --> description of bot and commands.\n",
+                                     " - `!examples` --> examples of conversations with BIDARA.\n"
+                                     " - `!system` --> lists the current system prompt, if any.\n",
+                                     " - `!set_default_sys` --> set the system prompt to the default biomimicry prompt.\n"
+                                     " - `!set_custom_sys` --> set a custom system prompt.\n"
+                                     " - `!clear_sys` --> clear the current system prompt.\n",
+                                     " - `!curr_conv` --> shows your current conversation.\n"
+                                     " - `!clear_conv` --> clear the current conversation.\n",
                                      "\n\n"])
 
         self.example = "".join(["system: "+self.default_sys + "\n\n",
@@ -117,15 +120,16 @@ class ChatBot(discord.Client):
 
             await message.channel.send("It seems you haven't set a system prompt yet for ChatGPT.\nWould you like to set a custom one or use the default?\nThe default prompt is:\n")
 
-            await message.channel.send(self.default_sys)
-            await message.channel.send("Please type !set_custom_sys or !set_default_sys to choose")
+            await message.channel.send(">>> " + self.default_sys)
+            await message.channel.send("Please type `!set_custom_sys` or `!set_default_sys` to choose.")
         else:
-            await message.channel.send((f"This is the current system prompt:\n\n{self.system_prompt_dict[message.author]}"))
+            await message.channel.send((f"This is the current system prompt:\n\n>>> {self.system_prompt_dict[message.author]}"))
 
     async def set_system_prompt(self, prompt_choice, message):
         if prompt_choice == "default":
             self.system_prompt_dict[message.author] = self.default_sys
-            await message.channel.send(f"The system prompt is set to:\n\n{self.default_sys}\n\nIf you would like to change or clear it, type !set_custom_sys or !clear_sys, respectively.")
+            await message.channel.send(f"The system prompt is set to:\n\n>>> {self.default_sys}\n\n")
+            await message.channel.send("If you would like to change or clear it, type `!set_custom_sys` or `!clear_sys`, respectively.")
         elif prompt_choice == "custom":
             self.custom_sys = True
 
@@ -141,7 +145,7 @@ class ChatBot(discord.Client):
                 return
 
             self.system_prompt_dict[message.author] = msg.content
-            await message.channel.send(f"The system prompt is set to:\n\n{msg.content}")
+            await message.channel.send(f"The system prompt is set to:\n\n>>> {msg.content}")
 
     async def list_conv(self, message):
         curr_conversation = self.conversations[message.author]
@@ -166,7 +170,7 @@ class ChatBot(discord.Client):
         elif keyword == "clear_sys":
             if message.author in self.system_prompt_dict:
                 self.system_prompt_dict[message.author] = ""
-                await message.channel.send("The system prompt is for Chat-GPT is cleared.")
+                await message.channel.send("The system prompt for Chat-GPT is cleared.")
         elif keyword == "curr_conv":
             await self.list_conv(message)
         elif keyword == "clear_conv":
