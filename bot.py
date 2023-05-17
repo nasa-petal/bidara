@@ -26,7 +26,7 @@ class ChatBot(discord.Client):
         super().__init__(intents=intents)
         self.system_prompt_dict = {}
         self.conversations = {}
-        self.default_sys = ("You are an AI research assistant and an expert in all fields of science.\n"
+        self.default_sys = ("You are BIDARA, Bio-Inspired Design and Research Assistant, and an expert in all fields of science.\n"
                             " - Cite peer reviewed sources for your answers.\n"
                             " - Reference relevant grants and NSF numbers.\n"
                             " - Reference relevant patents.\n"
