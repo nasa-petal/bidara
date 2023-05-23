@@ -110,7 +110,7 @@ class ChatBot(discord.Client):
         return response
     
     async def send_msg(self, txt, message, prefix=""):
-        chunk_length = 2000
+        chunk_length = 2000 - len(prefix)
         if len(txt) > chunk_length:
             await self.send_chunks(txt, chunk_length, message, prefix)
         else:
