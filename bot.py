@@ -48,7 +48,7 @@ class ChatBot(discord.Client):
                                      "The chatbot may produce inaccurate information about people, places, or facts. It is not intended to give advice. Conversations may be reviewed by OpenAI's AI trainers to improve their systems.\n\n",
                                      "Here are the in-built commands:\n",
                                      "`!help` - description of bot and commands.\n",
-                                     "`!example` - show an example conversation with BIDARA.\n",
+                                     "`!examples` - show examples of what BIDARA can do.\n",
                                      "`!system` - lists your current system prompt.\n",
                                      "`!set_default_sys` - set your system prompt to the default BIDARA prompt.\n",
                                      "`!set_bda_sys` - set your system prompt to one that instructs BIDARA to perform Biologize, Discover, and Abstract steps on a given design challenge question.\n",
@@ -58,11 +58,13 @@ class ChatBot(discord.Client):
                                      "`!clear_conv` - clear your current conversation.\n",
                                      "\n\n"])
 
-        self.example = "".join(["**Bio-inspired non-toxic white paint**\n",
+        self.examples = "".join(["**Bio-inspired non-toxic white paint**\n",
                                 "_user:_ How do organisms in nature reflect the color white?\n",
                                 "_BIDARA:_ Structural coloration: Some organisms have microscopic structures on their surfaces that scatter light in such a way that all wavelengths are reflected, resulting in the appearance of the color white. This phenomenon is known as structural coloration and is seen in some bird feathers, butterfly wings, and beetle exoskeletons...\n",
                                 "_user:_ What are some white beetles that use structural coloration?\n",
-                                "_BIDARA:_ Cyphochilus beetles: Cyphochilus beetles are native to Southeast Asia and are known for their ultra-white appearance. Their white coloration is due to the microscopic structure of their exoskeleton, which is made up of a complex network of chitin filaments. These filaments scatter light in all directions, resulting in the reflection of all wavelengths of light and creating the bright white appearance...\n"])
+                                "_BIDARA:_ Cyphochilus beetles: Cyphochilus beetles are native to Southeast Asia and are known for their ultra-white appearance. Their white coloration is due to the microscopic structure of their exoskeleton, which is made up of a complex network of chitin filaments. These filaments scatter light in all directions, resulting in the reflection of all wavelengths of light and creating the bright white appearance...\n\n",
+                                "**Biologize, Discover, and Abstract a design challenge using `!set_bda_sys` prompt**\n",
+                                "_user:_ How might we make urban cyclists more visible to drivers at night?"])
         self.custom_sys = False
 
     async def on_ready(self):
@@ -179,12 +181,8 @@ class ChatBot(discord.Client):
                 self.system_prompt_dict[message.author] = ""
                 self.conversations[message.author] = []
                 await message.channel.send("Your previous conversation is cleared.")
-        elif keyword == "example":
-            chunk_length = 2000
-            if len(self.example) > chunk_length:
-                await self.send_chunks(self.example, chunk_length, message)
-            else:
-                await message.channel.send(self.example)
+        elif keyword == "examples":
+            await self.send_msg(self.example, message)
         else:
             await message.channel.send("Not a valid commmand.")
 
@@ -220,13 +218,7 @@ class ChatBot(discord.Client):
                 self.conversations[message.author].append(
                     {'role': 'assistant', 'content': assistant_response})
 
-                chunk_length = 2000
-                if len(assistant_response) > chunk_length:
-
-                    await message.channel.send("Sorry for the wait, OpenAI response is large.\n Response greater than 2000 characters, sending response in chunks.\n")
-                    await self.send_chunks(assistant_response, chunk_length, message)
-                else:
-                    await message.channel.send(assistant_response)
+                await self.send_msg(assistant_response, message)
                 
 client = ChatBot(intents=intents)
 client.run(DISCORD_TOKEN)
