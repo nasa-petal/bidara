@@ -26,14 +26,17 @@ class ChatBot(discord.Client):
         super().__init__(intents=intents)
         self.system_prompt_dict = {}
         self.conversations = {}
-        self.default_sys = ("You are BIDARA, Bio-Inspired Design and Research Assistant, and an expert in all fields of science. As a biomimetic designer, focus on understanding, learning from, and emulating the strategies used by living things, with the intention of creating designs and technologies that are sustainable.\n\n"
+        self.bda_sys = ("You are BIDARA, Bio-Inspired Design and Research Assistant, and an expert in all fields of science. As a biomimetic designer, focus on understanding, learning from, and emulating the strategies used by living things, with the intention of creating designs and technologies that are sustainable.\n\n"
                             "Given a design challenge, think step-by-step through the following steps. Describe your plan written out in great detail and cite peer reviewed sources for your answers.\n\n"
                             "1. Biologize - Analyze the essential functions and context your design solution must address. Reframe them in biological terms, so that you can “ask nature” for advice. The goal of this step is to arrive at one or more “How does nature…?” questions that can guide your research as you look for biological models in the next step. To broaden the range of potential solutions, turn your question(s) around and consider opposite, or tangential functions.\n"
                             "2. Discover - Look for natural models (organisms and ecosystems) that need to address the same functions and context as your design solution. Identify the strategies used that support their survival and success. This step focuses on research and information gathering. You want to generate as many possible sources for inspiration as you can, using your “how does nature…” questions (from the Biologize step) as a guide. Look across multiple species, ecosystems, and scales and learn everything you can about the varied ways that nature has adapted to the functions and contexts relevant to your challenge.\n"
                             "3. Abstract - Carefully study the essential features or mechanisms that make the biological strategies successful. Use plain language to write down your understanding of how the features work, using sketches to ensure accurate comprehension. The goal of creating a design strategy is to make it easier to translate lessons from biology into design solutions. Design strategies describe how the biological strategy works without relying on biological terms. This makes cross-disciplinary collaboration easier because a design strategy focuses on function and mechanism without the baggage of potentially unfamiliar biological terms. Summarize the key elements of the biological strategy, capturing how it works to meet the function you’re interested in. To do this, you’ll need to distill the information from your research into a concise statement that describes the strategy. If you’re working from a scientific journal article, you can find relevant information and details in the following article sections: abstract, conclusion, discussion, and introduction, in approximately that order of value. Pull key information out and write a paragraph or two about the biological strategy. If you’re reading a synthesis of the science, such as that written by a science journalist, the author likely will have already summarized the relevant information. However, always try to check the original research because there might be important details, like measurements and illustrations, that will help improve your understanding and ultimately make your emulation stronger.")
 
-        # TODO
-        # !examples
+        self.default_sys = ("You are BIDARA, Bio-Inspired Design and Research Assistant, and an expert in all fields of science. As a biomimetic designer, focus on understanding, learning from, and emulating the strategies used by living things, with the intention of creating designs and technologies that are sustainable.\n\n"
+                        "- Cite peer reviewed sources for your answers.\n"
+                        "- Reference relevant grants and NSF numbers.\n"
+                        "- Reference relevant patents.\n"
+                        "- First think step-by-step - describe your plan written out in great detail.")
         self.instructions = "".join(["Welcome to BIDARA, a Bio-Inspired Design and Research Assistant AI chatbot that uses OpenAI’s GPT-4 model to respond to queries.\n",
                                      "As you chat back and forth either through DMs or in #chat-with-bidara, BIDARA keeps track of all the messages between you and it as part of your unique conversation history. ",
                                      "This allows it to respond to new queries based on the context of your conversation. Eventually your conversation will need to be cleared or OpenAI will not be able to generate new responses. ",
@@ -48,6 +51,7 @@ class ChatBot(discord.Client):
                                      "`!example` - show an example conversation with BIDARA.\n",
                                      "`!system` - lists your current system prompt.\n",
                                      "`!set_default_sys` - set your system prompt to the default BIDARA prompt.\n",
+                                     "`!set_bda_sys` - set your system prompt to one that instructs BIDARA to perform Biologize, Discover, and Abstract steps on a given design challenge question.\n",
                                      "`!set_custom_sys` - set a custom system prompt.\n",
                                      "`!clear_sys` - clear your current system prompt.\n",
                                      "`!curr_conv` - shows your current conversation.\n",
@@ -104,6 +108,13 @@ class ChatBot(discord.Client):
             temperature=0,
         )
         return response
+    
+    async def send_msg(txt, message):
+        chunk_length = 2000
+        if len(txt) > chunk_length:
+            await self.send_chunks(txt, chunk_length, message)
+        else:
+            await message.channel.send(txt)
 
     async def process_system_prompt(self, message):
         if message.author not in self.system_prompt_dict:
@@ -115,6 +126,11 @@ class ChatBot(discord.Client):
             self.system_prompt_dict[message.author] = self.default_sys
             await message.channel.send(f"Your system prompt is set to:\n>>> {self.default_sys}\n\n")
             await message.channel.send("If you would like to change or clear it, type `!set_custom_sys` or `!clear_sys`, respectively.")
+        elif prompt_choice == "bda":
+            self.system_prompt_dict[message.author] = self.bda_sys
+            txt = f"Your system prompt is set to:\n>>> {self.bda_sys}\n\n"
+            await self.send_msg(txt, message)
+            await self.send_msg("If you would like to change or clear it, type `!set_custom_sys` or `!clear_sys`, respectively.", message)
         elif prompt_choice == "custom":
             self.custom_sys = True
 
