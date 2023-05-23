@@ -43,7 +43,7 @@ class ChatBot(discord.Client):
                                      "To clear the conversation, and start a new one, use the `!clear_conv` command.\n\n",
                                      "BIDARA can be directed to respond in certain ways, by using GPT-4’s system prompt. By default the system prompt BIDARA uses allows it to respond in ways helpful for bio-inspired design and research assistant activities. ",
                                      "Please let us know about your experiences, good or bad, in the #bidara-feedback channel so we can improve it.\n\n",
-                                     "**Do not share any sensitive information** in your conversations including but not limited to, personal information, ITAR, CUI, export controlled, or trade secrets.\n",
+                                     "**Do not share any sensitive information** in your conversations including but not limited to, personal information, sensitive or private government/company data, ITAR, CUI, export controlled, or trade secrets.\n",
                                      "While OpenAI has safeguards in place, the chatbot may occasionally generate incorrect or misleading information and produce offensive or biased content.\n",
                                      "The chatbot may produce inaccurate information about people, places, or facts. It is not intended to give advice. Conversations may be reviewed by OpenAI's AI trainers to improve their systems.\n\n",
                                      "Here are the in-built commands:\n",
