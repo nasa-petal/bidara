@@ -109,7 +109,7 @@ class ChatBot(discord.Client):
         )
         return response
     
-    async def send_msg(txt, message):
+    async def send_msg(self, txt, message):
         chunk_length = 2000
         if len(txt) > chunk_length:
             await self.send_chunks(txt, chunk_length, message)
@@ -162,7 +162,7 @@ class ChatBot(discord.Client):
 
     async def process_keyword(self, keyword, message):
         if keyword == "help":
-            await self.send_msg("test", message)
+            await self.send_msg(self.instructions, message)
         elif keyword == "system":
             await self.process_system_prompt(message)
         elif keyword[-3:] == "sys" and keyword[:3] == "set":
