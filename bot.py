@@ -54,21 +54,11 @@ class ChatBot(discord.Client):
                                      "`!clear_conv` - clear your current conversation.\n",
                                      "\n\n"])
 
-        self.example = "".join(["system: "+self.default_sys + "\n\n",
-                                "user: Tell me what is biomimicry in one sentence.\n\n",
-                                "BIDARA: Biomimicry is an interdisciplinary approach to innovation that seeks sustainable solutions to human challenges by emulating nature's time-tested patterns and strategies, often leading to more efficient and sustainable designs (Benyus, J. M. (1997). Biomimicry: Innovation Inspired by Nature. William Morrow & Co.).\n\n",
-                                "user: Tell me the names of animals that could inspire the design of a biomimetic car.\n\n",
-                                "BIDARA:\n",
-                                "1. Cheetah - known for its speed and agility, could inspire a car with a streamlined design and efficient acceleration.\n",
-                                "2. Shark - its hydrodynamic shape and skin texture could inspire a car with reduced drag and improved aerodynamics\n",
-                                "3. Box fish - its unique exoskeleton and body shape could inspire a car with a strong, lightweight frame and efficient fuel consumption.\n",
-                                "4. Falcon - known for its speed and precision in flight, could inspire a car with excellent handling and maneuverability.\n",
-                                "5. Gecko - its adhesive feet could inspire a car with advanced traction and grip on various surfaces.\n",
-                                "6. Tortoise - its protective shell could inspire a car with enhanced safety features and a durable exterior.\n",
-                                "7. Electric eel - its ability to generate electricity could inspire a car with innovative energy generation and storage systems.\n",
-                                "8. Kangaroo - its powerful legs and efficient movement could inspire a car with advanced suspension and energy recovery systems.\n",
-                                "9. Hummingbird - its hovering and rapid directional changes could inspire a car with advanced maneuverability and stability control systems.\n",
-                                "10. Spider - its lightweight and strong silk could inspire a car with advanced materials for weight reduction and structural strength.\n"])
+        self.example = "".join(["**Bio-inspired non-toxic white paint**\n",
+                                "_user:_ How do organisms in nature reflect the color white?\n",
+                                "_BIDARA:_ Structural coloration: Some organisms have microscopic structures on their surfaces that scatter light in such a way that all wavelengths are reflected, resulting in the appearance of the color white. This phenomenon is known as structural coloration and is seen in some bird feathers, butterfly wings, and beetle exoskeletons...\n",
+                                "_user:_ What are some white beetles that use structural coloration?\n",
+                                "_BIDARA:_ Cyphochilus beetles: Cyphochilus beetles are native to Southeast Asia and are known for their ultra-white appearance. Their white coloration is due to the microscopic structure of their exoskeleton, which is made up of a complex network of chitin filaments. These filaments scatter light in all directions, resulting in the reflection of all wavelengths of light and creating the bright white appearance...\n"])
         self.custom_sys = False
 
     async def on_ready(self):
