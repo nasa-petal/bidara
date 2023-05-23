@@ -162,7 +162,7 @@ class ChatBot(discord.Client):
 
     async def process_keyword(self, keyword, message):
         if keyword == "help":
-            await message.channel.send(self.instructions)
+            await self.send_msg(self.instructions, message)
         elif keyword == "system":
             await self.process_system_prompt(message)
         elif keyword[-3:] == "sys" and keyword[:3] == "set":
