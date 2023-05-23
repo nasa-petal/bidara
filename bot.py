@@ -37,6 +37,9 @@ class ChatBot(discord.Client):
                         "- Reference relevant grants and NSF numbers.\n"
                         "- Reference relevant patents.\n"
                         "- First think step-by-step - describe your plan written out in great detail.")
+        self.define_sys = ("You are BIDARA, Bio-Inspired Design and Research Assistant, and an expert in all fields of science. As a biomimetic designer, focus on understanding, learning from, and emulating the strategies used by living things, with the intention of creating designs and technologies that are sustainable.\n\n"
+                           "Evaluate a given a design challenge based on how well it adheres to the criteria below. If the design challenge is too broad or narrow, suggest improvements or alternatives.\n\n"
+                           "Criteria: The first step in any design process is to define the problem or opportunity that you want your design to address. Clearly articulate the impact you want your design to have in the world and the criteria and constraints that will determine success. The goal of this step is not to decide what you will make or design but to understand what your design needs to do, for whom, and in what context. Once you have an idea of what you want to work on, try stating your challenge in one sentence. In order to avoid jumping to conclusions about what you will design, try stating the challenge as a question that begins with, “How might we…?”. Make sure you are considering context. Context provides specificity and constraints with which to work. Context can include many factors, but it’s essential to identify the needs of your stakeholders (those who will be impacted) and the location or setting in which your design will be used. Without this context a design challenge is often too broad to be addressed successfully. On the other hand, be careful not to define the context too narrowly. Applying too many constraints before beginning the design process can limit the number and variety of potential solutions. Asking the right question at the beginning of your project will guide you in your research and give you a better chance of arriving at an innovative and impactful solution. Take a systems view and look for potential leverage points. Think about the system surrounding the problem (or opportunity) you are designing for. What interactions and relationships are part of its context? What are the system boundaries and connections to other systems? Insights from this process can point to potential leverage points for making change and help you define your challenge more clearly.")
         self.instructions = "".join(["Welcome to BIDARA, a Bio-Inspired Design and Research Assistant AI chatbot that uses OpenAI’s GPT-4 model to respond to queries.\n",
                                      "As you chat back and forth either through DMs or in #chat-with-bidara, BIDARA keeps track of all the messages between you and it as part of your unique conversation history. ",
                                      "This allows it to respond to new queries based on the context of your conversation. Eventually your conversation will need to be cleared or OpenAI will not be able to generate new responses. ",
@@ -51,6 +54,7 @@ class ChatBot(discord.Client):
                                      "`!examples` - show examples of what BIDARA can do.\n",
                                      "`!system` - lists your current system prompt.\n",
                                      "`!set_default_sys` - set your system prompt to the default BIDARA prompt.\n",
+                                     "`!set_define_sys` - set your system prompt to one that instructs BIDARA to evaluate a given design challenge and offer suggested improvements.\n",
                                      "`!set_bda_sys` - set your system prompt to one that instructs BIDARA to perform Biologize, Discover, and Abstract steps on a given design challenge question.\n",
                                      "`!set_custom_sys` - set a custom system prompt.\n",
                                      "`!clear_sys` - clear your current system prompt.\n",
@@ -63,6 +67,8 @@ class ChatBot(discord.Client):
                                 "_BIDARA:_ Structural coloration: Some organisms have microscopic structures on their surfaces that scatter light in such a way that all wavelengths are reflected, resulting in the appearance of the color white. This phenomenon is known as structural coloration and is seen in some bird feathers, butterfly wings, and beetle exoskeletons...\n",
                                 "_user:_ What are some white beetles that use structural coloration?\n",
                                 "_BIDARA:_ Cyphochilus beetles: Cyphochilus beetles are native to Southeast Asia and are known for their ultra-white appearance. Their white coloration is due to the microscopic structure of their exoskeleton, which is made up of a complex network of chitin filaments. These filaments scatter light in all directions, resulting in the reflection of all wavelengths of light and creating the bright white appearance...\n\n",
+                                "**Offer suggestions to improve a given design challenge using `!set_define_sys` prompt**\n",
+                                "_user:_ How can we make cycling safer?\n\n",
                                 "**Biologize, Discover, and Abstract a design challenge using `!set_bda_sys` prompt**\n",
                                 "_user:_ How might we make urban cyclists more visible to drivers at night?"])
         self.custom_sys = False
@@ -130,9 +136,13 @@ class ChatBot(discord.Client):
             await message.channel.send("If you would like to change or clear it, type `!set_custom_sys` or `!clear_sys`, respectively.")
         elif prompt_choice == "bda":
             self.system_prompt_dict[message.author] = self.bda_sys
-            txt = f"Your system prompt is set to:\n>>> {self.bda_sys}\n\n"
             await self.send_msg("Your system prompt is set to:\n", message)
             await self.send_msg(f"{self.bda_sys}\n\n", message, prefix=">>> ")
+            await self.send_msg("If you would like to change or clear it, type `!set_custom_sys` or `!clear_sys`, respectively.", message)
+        elif prompt_choice == "define":
+            self.system_prompt_dict[message.author] = self.define_sys
+            await self.send_msg("Your system prompt is set to:\n", message)
+            await self.send_msg(f"{self.define_sys}\n\n", message, prefix=">>> ")
             await self.send_msg("If you would like to change or clear it, type `!set_custom_sys` or `!clear_sys`, respectively.", message)
         elif prompt_choice == "custom":
             self.custom_sys = True
