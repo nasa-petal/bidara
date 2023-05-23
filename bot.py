@@ -182,7 +182,7 @@ class ChatBot(discord.Client):
                 self.conversations[message.author] = []
                 await message.channel.send("Your previous conversation is cleared.")
         elif keyword == "examples":
-            await self.send_msg(self.example, message)
+            await self.send_msg(self.examples, message)
         else:
             await message.channel.send("Not a valid commmand.")
 
