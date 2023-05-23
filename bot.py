@@ -86,11 +86,11 @@ class ChatBot(discord.Client):
 
         self.conversations[author] = messages
 
-    async def send_chunks(self, assistant_response, chunk_length, message):
+    async def send_chunks(self, assistant_response, chunk_length, message, prefix=""):
         chunks = [assistant_response[i:i+chunk_length]
                   for i in range(0, len(assistant_response), chunk_length)]
         for chunk in chunks:
-            await message.channel.send(chunk)
+            await message.channel.send(prefix+chunk)
 
     def to_thread(func: typing.Callable) -> typing.Coroutine:
         @functools.wraps(func)
@@ -109,10 +109,10 @@ class ChatBot(discord.Client):
         )
         return response
     
-    async def send_msg(self, txt, message):
+    async def send_msg(self, txt, message, prefix=""):
         chunk_length = 2000
         if len(txt) > chunk_length:
-            await self.send_chunks(txt, chunk_length, message)
+            await self.send_chunks(txt, chunk_length, message, prefix)
         else:
             await message.channel.send(txt)
 
@@ -129,7 +129,8 @@ class ChatBot(discord.Client):
         elif prompt_choice == "bda":
             self.system_prompt_dict[message.author] = self.bda_sys
             txt = f"Your system prompt is set to:\n>>> {self.bda_sys}\n\n"
-            await self.send_msg(txt, message)
+            await self.send_msg("Your system prompt is set to:\n", message)
+            await self.send_msg(f"{self.bda_sys}\n\n", message, prefix=">>> ")
             await self.send_msg("If you would like to change or clear it, type `!set_custom_sys` or `!clear_sys`, respectively.", message)
         elif prompt_choice == "custom":
             self.custom_sys = True
