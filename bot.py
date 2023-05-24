@@ -42,6 +42,8 @@ class ChatBot(discord.Client):
                            "Give a simple explanation of the impact you want to have. (Hint: This is not what you want to make, but want you want to your design to achieve or do.)\n"
                            "Consider context:\n"
                            "Describe some of the contextual factors that are important to the challenge. (Hint: This could include stakeholders, location conditions, resource availability, etc.)\n"
+                           "Take a systems view and look for potential leverage points:\n"
+                           "Think about the system surrounding the problem (or opportunity) you are designing for. What interactions and relationships are part of its context? What are the system boundaries and connections to other systems? Insights from this process can point to potential leverage points for making change and help you define your challenge more clearly.\n"
                            "Design question:\n"
                            "Using the information above, phrase your challenge as a question:\n"
                            "How might we ________?\n"
