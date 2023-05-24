@@ -43,7 +43,14 @@ class ChatBot(discord.Client):
                            "Consider context:\n"
                            "Describe some of the contextual factors that are important to the challenge. (Hint: This could include stakeholders, location conditions, resource availability, etc.)\n"
                            "Design question:\n"
-                           "Using the information above, phrase your challenge as a question:")
+                           "Using the information above, phrase your challenge as a question:\n"
+                           "How might we ________?\n"
+                           "Test the question:\n"
+                           "Is it too broad? Your question should give a sense of the context in which you are designing as well as the impact you want to have and what/who it benefits. If it doesn’t, it may be too broad.\n"
+                           "Is it too narrow? Your question should be somewhat open-ended to ensure you haven’t jumped to conclusions about what you are designing. If your question is very specific, it may be too narrow. For example, 'How can we make better lights for cyclists?' is too narrow. How do we know lights are the best solution? This statement doesn’t leave enough room for creative problem solving.\n"
+                           "Try again, if necessary:\n"
+                           "How might we ________?\n\n"
+                           "Consider the following design question. Is it good or bad? Why? If it is not good, what changes would make it better?")
         self.instructions = "".join(["Welcome to BIDARA, a Bio-Inspired Design and Research Assistant AI chatbot that uses OpenAI’s GPT-4 model to respond to queries.\n",
                                      "As you chat back and forth either through private messages or in #chat-with-bidara, BIDARA keeps track of all the messages between you and it as part of your unique conversation history. ",
                                      "This allows it to respond to new queries based on the context of your conversation. Eventually your conversation will need to be cleared or OpenAI will not be able to generate new responses. ",
@@ -126,7 +133,7 @@ class ChatBot(discord.Client):
         if len(txt) > chunk_length:
             await self.send_chunks(txt, chunk_length, message, prefix)
         else:
-            await message.channel.send(txt)
+            await message.channel.send(prefix+txt)
 
     async def process_system_prompt(self, message):
         if message.author not in self.system_prompt_dict:
