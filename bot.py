@@ -201,7 +201,7 @@ class ChatBot(discord.Client):
             await self.list_conv(message)
         elif keyword == "clearconv":
             if message.author in self.conversations:
-                self.system_prompt_dict[message.author] = ""
+                #self.system_prompt_dict[message.author] = ""
                 self.conversations[message.author] = []
                 await message.channel.send("Your previous conversation is cleared.")
         elif keyword == "examples":
