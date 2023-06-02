@@ -234,7 +234,7 @@ class ChatBot(discord.Client):
             try:
                 response = await self.call_openai(self.conversations[message.author])
             except:
-                await message.channel.send("OpenAI experienced an error generating a response. Maybe your conversation has grown too large, try `!clearconv` to clear it, then try again. Or OpenAI may be currently overloaded with other requests. You can retry again after a short wait.")
+                await message.channel.send("ChatGPT experienced an error generating a response. ChatGPT may be currently overloaded with other requests. Retry again after a short wait. If that doesn't work, maybe your conversation has grown too large, try `!clearconv` to clear it, then try again. Conversations are limited to a maximum of about 6000 words.")
             else:
                 assistant_response = response['choices'][0]['message']['content']
 
