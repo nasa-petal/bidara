@@ -65,7 +65,7 @@ class ChatBot(discord.Client):
                                      "Please let us know about your experiences, good or bad, in the #bidara-feedback channel so we can improve it.\n\n",
                                      "**Do not share any sensitive information** in your conversations including but not limited to, personal information, sensitive or private government/company data, ITAR, CUI, export controlled, or trade secrets.\n",
                                      "While OpenAI has safeguards in place, the chatbot may occasionally generate incorrect or misleading information and produce offensive or biased content.\n",
-                                     "The chatbot may produce inaccurate information about people, places, or facts. It is not intended to give advice. Conversations may be reviewed by OpenAI's AI trainers to improve their systems.\n\n",
+                                     "The chatbot may produce inaccurate information about people, places, or facts. It is not intended to give advice.\n\n",
                                      "Here are the in-built commands:\n",
                                      "`!help` - description of bot and commands.\n",
                                      "`!examples` - show examples of what BIDARA can do.\n",
