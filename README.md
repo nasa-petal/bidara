@@ -46,8 +46,9 @@ The GPT_4_Biologist_ChatBot folder contains experiments to develop suitable syst
 ### Update Bot on AWS
 
 1. Login to AWS console
-2. Connect to BIDARA EC2 instance using session manager
-3. Run these commands in the terminal to stop the discord bot, pull changes from github, and restart the bot.
+2. switch to us-east-2
+3. Connect to BIDARA EC2 instance using session manager
+4. Run these commands in the terminal to stop the discord bot, pull changes from github, and restart the bot.
 ```sudo su
 screen -r discord
 CTRL-C
