@@ -51,7 +51,8 @@ The GPT_4_Biologist_ChatBot folder contains experiments to develop suitable syst
 4. Choose 'Connect'.
 5. Connect to BIDARA EC2 instance using session manager
 6. Run these commands in the terminal to stop the discord bot, pull changes from github, and restart the bot.
-```sudo su
+```
+sudo su
 screen -r discord
 CTRL-C
 git pull
