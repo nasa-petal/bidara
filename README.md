@@ -14,7 +14,7 @@ The GPT_4_Biologist_ChatBot folder contains experiments to develop suitable syst
 ### Run Locally
 
 1. Clone the repository
-2. Put your OpenAI and Discord API keys in the .env file
+2. Put your OpenAI and Discord API keys in the .env file. 
 3. Install the requirements
 4. Run python3 bot.py
 
@@ -28,11 +28,11 @@ The GPT_4_Biologist_ChatBot folder contains experiments to develop suitable syst
 6. Then go to OAuth2 --> URL Generator
 7. Toggle Bot and choose permissions
 8. Paste the generated url in the browser
-9. Add the bot to your desired server
+10. Add the bot to the desired server. (You'll need to create this new server in the discord app)
 
 ### Run on AWS
 
-1. Clone the repository
+1. Clone the repository.
 2. Input the API keys
 3. Go to AWS console
 4. Deploy an EC2 instance, and stop it
@@ -46,11 +46,12 @@ The GPT_4_Biologist_ChatBot folder contains experiments to develop suitable syst
 ### Update Bot on AWS
 
 1. Login to AWS console
-2. switch to us-east-2
-3. type EC2 in the search bar and enter. Click on Instances(running) option. Select the instance ID for BIDARA.
-4. Choose 'Connect'.
-5. Connect to BIDARA EC2 instance using session manager
-6. Run these commands in the terminal to stop the discord bot, pull changes from github, and restart the bot.
+2. Switch to us-east-2 (Ohio)
+3. Type EC2 in the search bar and enter. Select the Instances(running) option. Click on the instance ID for BIDARA.
+4. Choose 'Connect'. 
+5. Navigate to 'Session manager' tab and connect to BIDARA EC2 instance.
+6. This will open a terminal (session manager) in a separate window.
+7. Run these commands in the terminal one-by-one to stop the discord bot, pull changes from github, and restart the bot.
 ```
 sudo su
 screen -r discord
