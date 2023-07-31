@@ -20,14 +20,14 @@ The GPT_4_Biologist_ChatBot folder contains experiments to develop suitable syst
 
 ### Create a Discord Bot (to get API key)
 
-1. Go to Discord portal online
-2. Create a New Application
-3. Go to Bot tab
-4. Toggle SERVER MEMBERS INTENT and MESSAGE CONTENT INTENT, make sure REQUIRES OAUTH2 CODE GRANT is off
+1. Go to Discord portal online. (Link: https://discord.com/developers/docs/getting-started)
+2. Create a New Application by clicking on 'Create App' button. Give the new application a name.
+3. Go to Bot tab in the left pannel.
+4. Toggle SERVER MEMBERS INTENT and MESSAGE CONTENT INTENT, make sure REQUIRES OAUTH2 CODE GRANT is off. Save the changes.
 5. Reset Token to copy the API key
-6. Then go to OAuth2 --> URL Generator
-7. Toggle Bot and choose permissions
-8. Paste the generated url in the browser
+6. Then go to OAuth2 --> URL Generator (from the left pannel)
+7. Choose permissions. Be sure to select the 'bot' permission.
+8. Copy and paste the generated url in the browser
 10. Add the bot to the desired server. (You'll need to create this new server in the discord app)
 
 ### Run on AWS
