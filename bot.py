@@ -1,5 +1,6 @@
 import os
 import discord
+from discord.ext import commands
 import openai
 from decouple import config
 import re
@@ -13,6 +14,10 @@ OPEN_API_KEY = config('OPENAI_API_KEY')
 openai.api_key = OPEN_API_KEY
 
 intents = discord.Intents.default()
+# bot = commands.Bot(command_prefix='!', intents = intents)
+
+client = discord.Client(command_prefix='!', intents=intents)
+
 # intents.messages = True
 
 # turn off messages from guilds, so you only get messages from DM channels
@@ -57,6 +62,8 @@ class ChatBot(discord.Client):
                            "Try again, if necessary:\n"
                            "How might we ________?\n\n"
                            "Consider the following design question. Is it good or bad? Why? If it is not good, what changes would make it better?")
+        self.explore_sys =     ("You are knowledgable in all available products and technology. Come up with existing products or solutions for this design challenge.")
+
         self.instructions = "".join(["Welcome to BIDARA, a Bio-Inspired Design and Research Assistant AI chatbot that uses OpenAI’s GPT-4 model to respond to queries.\n",
                                      "As you chat back and forth either through private messages or in #chat-with-bidara, BIDARA keeps track of all the messages between you and it as part of your unique conversation history. ",
                                      "This allows it to respond to new queries based on the context of your conversation. Eventually your conversation will need to be cleared or OpenAI will not be able to generate new responses. ",
@@ -73,6 +80,7 @@ class ChatBot(discord.Client):
                                      "`!defaultmode` - set your system prompt to the default BIDARA prompt.\n",
                                      "`!definemode` - set your system prompt to one that instructs BIDARA to evaluate a given design challenge and offer suggested improvements using suggestions from the Design step from Biomimicry Institute's Biomimicry Design Process.\n",
                                      "`!bdamode` - set your system prompt to one that instructs BIDARA to perform Biologize, Discover, and Abstract steps from Biomimicry Institute's Biomimicry Design Process on a given design challenge question.\n",
+                                     "`!explore` - set your system prompt to one that instructs BIDARA to find existing products or solutions to a given design challenge. \n"
                                      "`!custommode` - set a custom system prompt.\n",
                                      "`!clearmode` - clear your current system prompt.\n",
                                      "`!conv` - shows your current conversation.\n",
@@ -87,7 +95,8 @@ class ChatBot(discord.Client):
                                 "**Offer suggestions to improve a given design challenge using `!definemode`**\n",
                                 "_user:_ How can we make cycling safer?\n\n",
                                 "**Biologize, Discover, and Abstract a design challenge using `!bdamode`**\n",
-                                "_user:_ How might we make urban cyclists more visible to drivers at night?"])
+                                "_user:_ How can we make cyclists more visible at night?\n\n",
+                                "**Give examples of existing products or solutions for a given design challenge using `!explore`**\n"])
         self.custom_sys = False
 
     async def on_ready(self):
@@ -161,6 +170,12 @@ class ChatBot(discord.Client):
             await self.send_msg("Your system prompt is set to:\n", message)
             await self.send_msg(f"{self.define_sys}\n\n", message, prefix=">>> ")
             await self.send_msg("If you would like to change or clear it, type `!custommode` or `!clearmode`, respectively.", message)
+        elif prompt_choice == "explore":
+            self.system_prompt_dict[message.author] = self.explore_sys
+            await self.send_msg("Your system prompt is set to:\n", message)
+            await self.send_msg(f"{self.explore_sys}\n\n", message, prefix = ">>> ")
+            await self.send_msg("If you would like to change or clear it, type `!custommode` or `!clearmode`, respectively.", message)
+
         elif prompt_choice == "custom":
             self.custom_sys = True
 
@@ -201,6 +216,10 @@ class ChatBot(discord.Client):
         elif keyword[-4:] == "mode":
             prompt_choice = keyword[:-4]
             await self.set_system_prompt(prompt_choice, message)
+        elif keyword == "explore":
+            prompt_choice = keyword
+            await self.set_system_prompt(prompt_choice, message)
+            
         
         elif keyword == "conv":
             await self.list_conv(message)
@@ -226,9 +245,11 @@ class ChatBot(discord.Client):
         if message.author not in self.conversations:
             self.conversations[message.author] = []
 
-        if input_content[0] == "!":
+        if input_content[0] == "!":    
             await self.process_keyword(input_content[1:], message)
             return
+    
+
         elif self.custom_sys == True:
             self.custom_sys = False
             return
@@ -247,6 +268,21 @@ class ChatBot(discord.Client):
                     {'role': 'assistant', 'content': assistant_response})
 
                 await self.send_msg(assistant_response, message)
-                
+
+    async def explore_sys(message):
+
+        if message.author == client.user:
+            return
+        messages = [ {"role": "system", "content": "You are knowledgable in all available products and technology. Come up with existing products or solutions for this design challenge."}]
+
+        # Use the OpenAI API to generate a response to the message
+        response = openai.Completion.create(
+            model="gpt-4",
+            messages = messages,
+            prompt=f"{message}",
+            max_tokens=2048,            
+            temperature=0,
+        )  
+        await message.channel.send(response.choices[0].text)
 client = ChatBot(intents=intents)
 client.run(DISCORD_TOKEN)
