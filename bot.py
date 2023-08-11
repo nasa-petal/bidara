@@ -17,6 +17,7 @@ OPEN_API_KEY = config('OPENAI_API_KEY')
 openai.api_key = OPEN_API_KEY
 
 intents = discord.Intents.default()
+client = discord.Client(command_prefix='!', intents=intents)
 # intents.messages = True
 
 # turn off messages from guilds, so you only get messages from DM channels
@@ -69,6 +70,8 @@ class ChatBot(discord.Client):
                            "Try again, if necessary:\n"
                            "How might we ________?\n\n"
                            "Consider the following design question. Is it good or bad? Why? If it is not good, what changes would make it better?")
+        self.explore_sys = ("You are knowledgable in all available products and technology. Come up with existing products or solutions for this design challenge.")
+        
         self.instructions = "".join(["Welcome to BIDARA, a Bio-Inspired Design and Research Assistant AI chatbot that uses OpenAI’s GPT-4 model to respond to queries.\n",
                                      "As you chat back and forth either through private messages or in #chat-with-bidara, BIDARA keeps track of all the messages between you and it as part of your unique conversation history. ",
                                      "This allows it to respond to new queries based on the context of your conversation. Eventually your conversation will need to be cleared or OpenAI will not be able to generate new responses. ",
@@ -85,6 +88,7 @@ class ChatBot(discord.Client):
                                      "`!defaultmode` - set your system prompt to the default BIDARA prompt.\n",
                                      "`!definemode` - set your system prompt to one that instructs BIDARA to evaluate a given design challenge and offer suggested improvements using suggestions from the Design step from Biomimicry Institute's Biomimicry Design Process.\n",
                                      "`!bdamode` - set your system prompt to one that instructs BIDARA to perform Biologize, Discover, and Abstract steps from Biomimicry Institute's Biomimicry Design Process on a given design challenge question.\n",
+                                     "`!explore` - set your system prompt to one that instructs BIDARA to find existing products or solutions to a given design challenge. \n"
                                      "`!custommode` - set a custom system prompt.\n",
                                      "`!clearmode` - clear your current system prompt.\n",
                                      "`!conv` - shows your current conversation.\n",
@@ -99,7 +103,8 @@ class ChatBot(discord.Client):
                                 "**Offer suggestions to improve a given design challenge using `!definemode`**\n",
                                 "_user:_ How can we make cycling safer?\n\n",
                                 "**Biologize, Discover, and Abstract a design challenge using `!bdamode`**\n",
-                                "_user:_ How might we make urban cyclists more visible to drivers at night?"])
+                                 "_user:_ How can we make cyclists more visible at night?\n\n",
+                                "**Give examples of existing products or solutions for a given design challenge using `!explore`**\n"])
         self.custom_sys = False
 
     async def on_ready(self):
@@ -165,6 +170,11 @@ class ChatBot(discord.Client):
             await self.send_msg("Your system prompt is set to:\n", message)
             await self.send_msg(f"{self.define_sys}\n\n", message, prefix=">>> ")
             await self.send_msg("If you would like to change or clear it, type `!custommode` or `!clearmode`, respectively.", message)
+        elif prompt_choice == "explore":
+            self.system_prompt_dict[message.author] = self.explore_sys
+            await self.send_msg("Your system prompt is set to:\n", message)
+            await self.send_msg(f"{self.explore_sys}\n\n", message, prefix = ">>> ")
+            await self.send_msg("If you would like to change or clear it, type `!custommode` or `!clearmode`, respectively.", message)
         elif prompt_choice == "custom":
             self.custom_sys = True
 
@@ -194,13 +204,6 @@ class ChatBot(discord.Client):
                 content = "No system prompt set"
             await message.channel.send(role + ": " + content)
     
-    # @bot.command(name='shutdown', hidden=True)
-    # #@commands.is_owner()
-    # async def shutdown(ctx):
-    #     await ctx.send("Shutting down...")
-    #     await bot.logout()
-    #     await bot.close()
-    #     os._exit(0)  # Forcefully exit the application
 
     async def process_keyword(self, keyword, message):
         if keyword == "help":
@@ -213,7 +216,9 @@ class ChatBot(discord.Client):
         elif keyword[-4:] == "mode":
             prompt_choice = keyword[:-4]
             await self.set_system_prompt(prompt_choice, message)
-        
+        elif keyword == "explore":
+            prompt_choice = keyword
+            await self.set_system_prompt(prompt_choice, message)
         elif keyword == "conv":
             await self.list_conv(message)
         elif keyword == "clearconv":
@@ -275,6 +280,7 @@ class ChatBot(discord.Client):
                 #assistant_response = str_to_print
                 self.conversations[discord_message.author].append(
                     {'role': 'assistant', 'content': str_to_print})
+                await self.send_msg("BIOLOGIZE: \n", discord_message)
                 await self.send_msg(str_to_print, discord_message)
                 return response_biologize
     
@@ -283,7 +289,7 @@ class ChatBot(discord.Client):
 
     @to_thread
     def call_openai_discover(self, messages):
-        print("DISCOVER MESSAGES: ", messages)
+        #print("DISCOVER MESSAGES: ", messages)
         completion = openai.ChatCompletion.create(
             model="gpt-4-0613",
             messages = messages,
@@ -316,7 +322,6 @@ class ChatBot(discord.Client):
     async def discover_on_message(self, discord_message, list_of_queries):
         try:
             messages = []
-            openai.api_key = "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"
             for q in list_of_queries:
                 message = [
                     {'role': 'user', 'content': q},
@@ -341,7 +346,7 @@ class ChatBot(discord.Client):
             string_to_print = response_discover[0]
             for res in response_discover[1:]:
                 string_to_print += ", " + res 
-            await self.send_msg("DISCOVER STEP SOLUTIONS: " + string_to_print, discord_message)
+            await self.send_msg("DISCOVER: \n" + string_to_print, discord_message)
             
             # return the discover list to be used as input for next step
             return response_discover
@@ -352,13 +357,12 @@ class ChatBot(discord.Client):
 
     @to_thread
     def call_openai_abstract(self, messages_abstract):
-        print("abstract: ", messages_abstract)
+        #print("abstract: ", messages_abstract)
         completion = openai.ChatCompletion.create(
                 model = "gpt-4-0613",
                 messages = messages_abstract,
         )
         sol = completion["choices"][0]["message"]["content"]
-        #print("SOL: ", sol)
         return sol
 
     async def abstract_on_message(self, discord_message, discover_list, original_input_query):#user_message_biologize, list_of_discover_solutions_2):
@@ -390,7 +394,7 @@ class ChatBot(discord.Client):
             ]
             messages.append(message)
         response_abstract = []
-        await self.send_msg("ABSTRACT STEP SOLUTIONS: \n", discord_message)
+        await self.send_msg("ABSTRACT: \n", discord_message)
         for msg in messages:
             temp = await self.call_openai_abstract(msg)
             await self.send_msg(temp + "\n", discord_message)
@@ -400,91 +404,7 @@ class ChatBot(discord.Client):
             str_to_print += res + ", "
         return response_abstract
 
-    ####################################################
-#     # add code for the abstract step
-
-#     @to_thread
-#     def call_openai_abstract(self, messages_abstract):
-#         print("abstract: ", messages_abstract)
-#         completion = openai.ChatCompletion.create(
-#                 model = "gpt-4-0613",
-#                 messages = messages_abstract,
-#         )
-#         sol = completion["choices"][0]["message"]["content"]
-#         print("SOL: ", sol)
-#         return sol
-
-#     async def abstract_on_message(self, discord_message, discover_list, original_input_query):#user_message_biologize, list_of_discover_solutions_2):
-#         list_of_abstract_solutions = []
-        
-#         # system_message_abstract = f"""
-#         # The user inputs a few similar comma-separated biological models. 
-#         # First, carefully study the essential features or mechanisms that make the biological models input by user successful. 
-#         # Then, come up with a design strategy that translates the biological models input by the user into a viable solution for : {original_input_query}. 
-#         # ONLY focus on the biological models input by user, DO NOT ADD ANY yourself.
-#         # The design strategy should describe how the features work to meet the function(s) you're interested in in great detail. 
-#         # Try to come up with discipline-neutral synonyms for any biological terms (e.g. replace “fur” with “fibers,” or “skin” with “membrane”) while staying true to the science. 
-#         # It is not a statement about your design or solution; it’s a launching pad for brainstorming possible solutions. 
-#         # Stay true to the biology. 
-#         # Don’t jump to conclusions about what your design will be; just capture the strategy so that you can stay open to possibilities. 
-#         # When you are done, review your design strategy with a critical eye. Have you included all of the pertinent information? Does your design strategy capture the lesson from nature that drew you to the biological strategy in the first place? Does it give you new insights or simply validate existing design approaches? 
-#         # If possible, give a few examples of how the biological model uses this function in realtime. 
-#         # Dont be repetitive. Dont repeat the user query wording in your paragraph. 
-#         # Then describe the complete design strategy.
-#         # Sum up everything in a minimum of 4-5 sentences.
-#         # Output a single paragraph only.
-#         # Output format: Return a single paragraph as a python string in the format: <Comma separated biological models input by user><:><relevant characteristics of these biological models><the design strategy of how the given biological models can be used in solving the query defined above>
-#         # """
-        
-#         system_message_abstract = f"""
-#         The user inputs a biological model. Come up with a design strategy that translates the biological model input by the user into a viable solution for answering the query: {original_input_query}. 
-#         Output a single paragraph. In the paragraph, first define and describe the characteristics of the biological model that we are translating into design strategies in 2-3 sentences. If possible, give a few examples of how the biological 
-#         model uses this function in realtime. Dont be repetitive. Dont repeat the user query wording in your paragraph again and again. Then describe the complete design strategy.
-#         Sum up everything in a minimum of 4-5 sentences.
-#         Solution: Return a paragraph as a python string in the format: <biological model name input by the user><:><the design strategy of how a biological model can be used in solving the query defined above>
-#         """
-        
-#        # #The design strategy should clearly address the function(s) you want to meet within the context it 
-#        # #will be used. \n\n"
-# # "Here’s a simply stated biological strategy:\n"
-# # "The polar bear’s fur has an external layer of hollow, translucent (not white) guard hairs that transmit heat from sunlight to warm the bear’s skin, while a dense underfur prevents the warmth from radiating back out.\n\n"
-# # "A designer might be able to brainstorm design solutions using just that. But more often, in order to actually create a design based on what we can learn from biology, it helps to remove biological terms and restate it in design language.\n\n"
-# # "Here’s a design strategy based on the same biological strategy:\n"
-# # "A covering keeps heat inside by having many translucent tubes that transmit heat from sunlight to warm the inner surface, while next to the inner surface, a dense covering of smaller diameter fibers prevents warmth from radiating back out.\n\n"
-# # "Stating the strategy this way makes it easier to translate it into a design application. (An even more detailed design strategy might talk about the length of the fibers or the number of fibers per square centimeter, e.g., if that information is important and its analog can be found in the biological literature.)")
-        
-#         # system_message_abstract = f"""Come up with a design strategy that translates the biological model input by the user into a viable solution for answering the query: {original_input_query}. Sum up the strategy in 2-3 sentences. Try to be as brief and informative as possible. 
-#         #                               Solution: Return a paragraph as a python string in the format: <biological model name input by the user><:><the design strategy of how a biological model can be used in solving the query defined above>"""         
-        
-#         messages = []
-#         print("DISCOVER LIST: ", discover_list)
-#         print('TYPE: ', type(discover_list))
-#         for discover in discover_list:
-#             #print("original_discover: ", discover)
-#             discover = discover.split(",")[0]
-#             #print("entry: ", discover)
-#             message = [
-#                 {'role': 'user', 'content': discover},
-#                 {'role': 'system', 'content': system_message_abstract}
-#             ]
-#             messages.append(message)
-#         response_abstract = []
-#         await self.send_msg("ABSTRACT STEP SOLUTIONS: \n", discord_message)
-#         counter = 1
-#         for msg in messages:
-#             temp = await self.call_openai_abstract(msg)
-#             #await self.send_msg(counter, discord_message)
-#             await self.send_msg(temp + "\n", discord_message)
-#             #print("")
-#             #counter = counter + 1
-#             response_abstract.append(temp)
-#         str_to_print = ""
-#         for res in response_abstract:
-#             str_to_print += res + ", "
-#         #await self.send_msg("ABSTRACT STEP SOLUTIONS: " + str_to_print, discord_message)
-#         return response_abstract
-    
-    #########################################################
+   
     # add code for redundancy eliminated response - after abstract step
     
     @to_thread
@@ -514,28 +434,26 @@ class ChatBot(discord.Client):
             function_call="auto",
         )
         return completion["choices"][0]["message"]["content"]
-    
-    
-    #     f"""The user inputs a list of design solutions. Carefully study all the individual entries of the list and identify the designs that use the same (or very similar) biological model or strategy to give solutions to the problem: {original_input_query}.
-    #     Combine these similar entries into a single entry by 
-    #     Sum up everything in a minimum of 4-5 sentences. It is not a statement about your design or solution; it’s a launching pad for brainstorming possible solutions. Stay true to the biology. Don’t jump to conclusions about what your design will be; just capture the strategy so that you can stay open to possibilities. 
-    #     When you are done, review your design strategy with a critical eye. Have you included all of the pertinent information? Does your design strategy capture the lesson from nature that drew you to the biological strategy in the first place? Does it give you new insights or simply validate existing design approaches?
-    #     Solution: Return a paragraph as a python string in the format: <biological model name input by the user><:><relevant characteristics of biological model><the design strategy of how a biological model can be used in solving the query defined above>"""
-    
+
     async def red_elim_on_message(self, discord_message, abstract_list, original_input_query):
         system_message_redundancy_elimination =f"""Take in a list input by the user. The list consists of paragraphs describing design strategies. Eliminate the redundant design strategies by combining contents of paragraphs that are inspired by similar biological models for answering the query: {original_input_query}. Sum up each strategy in 2-3 sentences. Try to be as brief and informative as possible. Return the new list with redundancy eliminated entries. 
                                                Solution: Return a list where each entry is a paragraph, ie, a python string, in the format: <biological model name><:><the design strategy of how a biological model can be used in solving the query defined above>"""
-        await self.send_msg("REDUNDANCY ELIMINATION STEP SOLUTIONS: \n", discord_message)
+        await self.send_msg("REDUNDANCY ELIMINATION: " +"\n", discord_message)
         messages =  [{'role':'user', 'content': str(abstract_list)},
                                             {'role': 'system','content': system_message_redundancy_elimination}]
         response_red_elim = await self.call_openai_red_elim(messages)
-        await self.send_msg(response_red_elim + "\n", discord_message)
+        count = 1
+        str_to_print = ""
+        for discover in response_red_elim:
+            str_to_print += str(count) + discover + "\n"
+            count = count + 1
+        await self.send_msg(str_to_print + "\n", discord_message)
         return response_red_elim
     
     ###########################################################
     # add redundancy elimination after discover step
     @to_thread
-    def call_openai_red_elim_2(self, messages):
+    def call_openai_red_elim(self, messages):
         completion = openai.ChatCompletion.create(
             model = "gpt-4-0613",
             messages = messages,
@@ -563,24 +481,12 @@ class ChatBot(discord.Client):
         print("red elim completion: ", completion)
         return completion["choices"][0]["message"]["content"]
     
-    async def red_elim_2(self, discord_message, discover_list, original_input_query):
+    async def red_elim(self, discord_message, discover_list, original_input_query):
         
         lowercase_list = [item.lower() for item in discover_list]
         unique_list_1 = list(set(lowercase_list))
         
-        # system_msg_red_elim_after_discover = f"""
-        # Take in a list input by the user. This list consists of different biological models. 
-        # Your task is to first get rid of redundancies. For example, if 2 or more entries denote the same thing but are just worded differently, eliminate one of them from the list. For example, the models "fireflies" and "fire fly" should be converted to just "fireflies". 
-        # After this, combine similar models into a single entry. For example: To answer the question "How can we make urban cyclists more visible to drivers at night?", the biological models "fireflies", "bioluminiscent organisms" and firefly eyes" should be combined into a single entry as "fireflies, bioluminiscent organisms, and firefly eyes". But, if the 2 entries are exactly similar, one of them should be eliminated. 
-        # To determine whether 2 biological models are similar, come up with design solutions using these biological models one by one to give solutions to the query: {original_input_query}. Carefully study the essential features or mechanisms that make the biological strategy successful. The design strategy should describe how the features work to meet the function(s) you're interested in in great detail.
-        # If any 2 entries use the same features or mechanisms to give the design solution, they are considered similar and should be combined using "and".
-        # Examples: "glow-in-the-dark organisms" and "bioluminescent organisms" should be combined; "fireflies" and "glow worms" should be combined; "bioluminiscent fungi" and "bioluminiscent mushrooms" should be combined.
-        # Try to combine as many entries as possible, so that the resulting number of entries becomes less than 20. 
-        
-        # Eliminate the redundancies, combine similar entries, and return a new python list consisting of the new entries of biological models. 
-        # Dont give steps to perform above tasks, but actually perform them.
-        # Solution: <Python list of 20 entries. Every entry can contain either single biological model or a list of similar biological models, each separated with a comma.>
-        # """
+
         system_msg_red_elim_after_discover = f"""
         Take in a list input by the user. This list consists of different biological models. You need to group similar biological models into a single entry.
         Sort all the biological models into groups of 20. make these groups based on similarity of these models.
@@ -591,27 +497,17 @@ class ChatBot(discord.Client):
         Solution: <Python list of 20 entries. Every entry can contain either single biological model or a list of similar biological models, each separated with a comma.>
         """
         
-        await self.send_msg("DISCOVER SOLUTIONS AFTER REDUNDANCY ELIMINATION: \n", discord_message)
+        await self.send_msg("DISCOVER AFTER CATEGORIZATION: \n", discord_message)
         messages = [{'role': 'user', 'content': str(unique_list_1)},
                     {'role': 'system', 'content': system_msg_red_elim_after_discover}]
-        response = await self.call_openai_red_elim_2(messages)
-        print("intermediate res: ", response)
-        print("type: ", type(response))
-        await self.send_msg(str(response) + "\n", discord_message)
+        response = await self.call_openai_red_elim(messages)
+        # response = ast.literal_eval(response)
+        # str_to_print = ""
+        # for res in response:
+        #     str_to_print += "[ " + res + " ]\n"
+        await self.send_msg(str(response), discord_message)
         return response        
-    
-    #########################################################
-    # async def final_red_elim(self, discord_message, response_discover, original_input_query):
-    #     lowercase_list = [item.lower() for item in response_discover]
-    #     unique_discover = list(set(lowercase_list))
-        
-    #     system_msg_red_elim_after_discover = f"""
-        
-    #     """
-        
-    
-    
-    ########################################################
+
 
     async def on_message(self, message):
         # Check if a message is a DM
@@ -640,26 +536,28 @@ class ChatBot(discord.Client):
             original_input_query = self.conversations[message.author]
             response_biologize = await self.biologize_on_message(message)
             response_discover = await self.discover_on_message(message, response_biologize)
-            #print("DIS: ", response_discover)
-            #print("Type", type(response_discover))
-            #response_unique_discover_2 = await self.final_red_elim(message, response_discover, original_input_query)
-            #temp = response_discover.split("'")
-            #print(type(response_discover))
-            
-            ##########
-            response_unique_discover_2 = await self.red_elim_2(message, response_discover, original_input_query)
-            #print(type(response_unique_discover_2))
-            str_to_lst = ast.literal_eval(response_unique_discover_2)
-            print("STR TO LIST:  ", str_to_lst)   
-            print("TYPE:  ", type(str_to_lst))         
-            response_abstract = await self.abstract_on_message(message, str_to_lst, original_input_query)
+            response_unique_discover_2 = await self.red_elim(message, response_discover, original_input_query)
+            #str_to_lst = ast.literal_eval(response_unique_discover_2)       
+            response_abstract = await self.abstract_on_message(message, ast.literal_eval(response_unique_discover_2), original_input_query)
+            print("ABSTRACT SOLUTIONS: \n")
+            print(response_abstract)
+    
+    async def explore_sys(message):
 
-            # response_red_elim = await self.red_elim_on_message(message, response_abstract, original_input_query)
-            # print(response_red_elim)
-            ##########
-# if __name__ == "__main__":
-#     client = ChatBot(intents=intents)
-#     client.run(DISCORD_TOKEN)
+        if message.author == client.user:
+            return
+        messages = [ {"role": "system", "content": "You are knowledgable in all available products and technology. Come up with existing products or solutions for this design challenge."}]
+
+        # Use the OpenAI API to generate a response to the message
+        response = openai.Completion.create(
+            model="gpt-4",
+            messages = messages,
+            prompt=f"{message}",
+            max_tokens=2048,            
+            temperature=0,
+        )  
+        await message.channel.send(response.choices[0].text)
+
 
 client = ChatBot(intents = intents)
 client.run(DISCORD_TOKEN)
