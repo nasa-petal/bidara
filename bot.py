@@ -532,15 +532,20 @@ class ChatBot(discord.Client):
         
         # for bda mode
         async with message.channel.typing():
+            try:
+                original_input_query = self.conversations[message.author]
+                response_biologize = await self.biologize_on_message(message)
+                response_discover = await self.discover_on_message(message, response_biologize)
+                response_unique_discover_2 = await self.red_elim(message, response_discover, original_input_query)
+                #str_to_lst = ast.literal_eval(response_unique_discover_2)       
+                response_abstract = await self.abstract_on_message(message, ast.literal_eval(response_unique_discover_2), original_input_query)
             
-            original_input_query = self.conversations[message.author]
-            response_biologize = await self.biologize_on_message(message)
-            response_discover = await self.discover_on_message(message, response_biologize)
-            response_unique_discover_2 = await self.red_elim(message, response_discover, original_input_query)
-            #str_to_lst = ast.literal_eval(response_unique_discover_2)       
-            response_abstract = await self.abstract_on_message(message, ast.literal_eval(response_unique_discover_2), original_input_query)
-            print("ABSTRACT SOLUTIONS: \n")
-            print(response_abstract)
+            except:
+                await message.channel.send("ChatGPT experienced an error generating a response. ChatGPT may be currently overloaded with other requests. Retry again after a short wait. If that doesn't work, maybe your conversation has grown too large, try `!clearconv` to clear it, then try again. Conversations are limited to a maximum of about 6000 words.")
+            else:
+                self.conversations[message.author].append(
+                    {'role': 'assistant', 'content': response_abstract})
+
     
     async def explore_sys(message):
 
