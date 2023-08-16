@@ -64,7 +64,7 @@ searchQueryExecutor(chainOutput1) -> SemanticScholarSearch("XYZ", 1) -> <Paper1T
 '''
 def searchQueryExecutor(inputs: dict) -> dict:
     search_query_output = re.findall(r"Search\[\+?(-?.+)\s*\]", inputs['biologize_action'])[0]
-    response = SemanticScholarSearch(search_query_output, 3)
+    response = SemanticScholarSearch(search_query_output, 2)
 
     return {'biologize_abstract_retrieved_paper': inputs['biologize_action'] + "\n" + response}
 
