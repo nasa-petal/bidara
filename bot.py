@@ -6,7 +6,7 @@ from decouple import config
 import functools
 import typing
 import asyncio
-from retrieval import retrievalPrompt
+from retrieval import intializeChain
 
 
 DISCORD_TOKEN = config('DISCORD_TOKEN')
@@ -158,7 +158,7 @@ class ChatBot(discord.Client):
 
     @to_thread
     def send_agent_msg(self, txt, message, prefix=""):
-        response = retrievalPrompt()(message.content)
+        response = intializeChain()(message.content)
         return response
     
     async def set_system_prompt(self, prompt_choice, message):
@@ -268,7 +268,7 @@ class ChatBot(discord.Client):
         if self.system_prompt_dict[message.author] == self.retrieval_sys:
             await self.send_msg("Agent is processing...", message)
             response = await self.send_agent_msg(message.content, message)
-            await self.send_msg(response['biologize_abstract_retrieved_paper'], message)
+            await self.send_msg(response['biologize_abstract_retrieved_paper'] + response['discover_abstract_answer'], message)
 
             return
 
