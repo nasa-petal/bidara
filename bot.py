@@ -3,10 +3,10 @@ import discord
 from discord.ext import commands
 import openai
 from decouple import config
-import re
 import functools
 import typing
 import asyncio
+from retrieval import intializeChain
 
 
 DISCORD_TOKEN = config('DISCORD_TOKEN')
@@ -97,6 +97,7 @@ class ChatBot(discord.Client):
                                 "**Biologize, Discover, and Abstract a design challenge using `!bdamode`**\n",
                                 "_user:_ How can we make cyclists more visible at night?\n\n",
                                 "**Give examples of existing products or solutions for a given design challenge using `!explore`**\n"])
+        self.retrieval_sys = "Few-shot prompt"
         self.custom_sys = False
 
     async def on_ready(self):
@@ -155,6 +156,11 @@ class ChatBot(discord.Client):
             self.system_prompt_dict[message.author] = self.default_sys
         await message.channel.send((f"This is your current system prompt:\n>>> {self.system_prompt_dict[message.author]}"))
 
+    @to_thread
+    def send_agent_msg(self, txt, message, prefix=""):
+        response = intializeChain()(message.content)
+        return response
+    
     async def set_system_prompt(self, prompt_choice, message):
         if prompt_choice == "default":
             self.system_prompt_dict[message.author] = self.default_sys
@@ -175,7 +181,11 @@ class ChatBot(discord.Client):
             await self.send_msg("Your system prompt is set to:\n", message)
             await self.send_msg(f"{self.explore_sys}\n\n", message, prefix = ">>> ")
             await self.send_msg("If you would like to change or clear it, type `!custommode` or `!clearmode`, respectively.", message)
-
+        elif prompt_choice == "retrieval":
+            self.system_prompt_dict[message.author] = self.retrieval_sys
+            await self.send_msg("Your system prompt is set to:\n", message)
+            await self.send_msg(f"{self.retrieval_sys}\n\n", message, prefix = ">>> ")
+            await self.send_msg("If you would like to change or clear it, type `!custommode` or `!clearmode`, respectively.", message)
         elif prompt_choice == "custom":
             self.custom_sys = True
 
@@ -219,8 +229,9 @@ class ChatBot(discord.Client):
         elif keyword == "explore":
             prompt_choice = keyword
             await self.set_system_prompt(prompt_choice, message)
-            
-        
+        elif keyword == "retrieval":    
+            prompt_choice = keyword
+            await self.set_system_prompt(prompt_choice, message)
         elif keyword == "conv":
             await self.list_conv(message)
         elif keyword == "clearconv":
@@ -253,6 +264,13 @@ class ChatBot(discord.Client):
         elif self.custom_sys == True:
             self.custom_sys = False
             return
+        
+        if self.system_prompt_dict[message.author] == self.retrieval_sys:
+            await self.send_msg("Agent is processing...", message)
+            response = await self.send_agent_msg(message.content, message)
+            await self.send_msg(response['biologize_abstract_retrieved_paper'] + response['discover_abstract_answer'], message)
+
+            return
 
         self.get_chatgpt_messages(input_content, message.author)
 
@@ -269,20 +287,5 @@ class ChatBot(discord.Client):
 
                 await self.send_msg(assistant_response, message)
 
-    async def explore_sys(message):
-
-        if message.author == client.user:
-            return
-        messages = [ {"role": "system", "content": "You are knowledgable in all available products and technology. Come up with existing products or solutions for this design challenge."}]
-
-        # Use the OpenAI API to generate a response to the message
-        response = openai.Completion.create(
-            model="gpt-4",
-            messages = messages,
-            prompt=f"{message}",
-            max_tokens=2048,            
-            temperature=0,
-        )  
-        await message.channel.send(response.choices[0].text)
 client = ChatBot(intents=intents)
 client.run(DISCORD_TOKEN)
