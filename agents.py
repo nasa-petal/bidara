@@ -5,13 +5,13 @@ from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts.chat import MessagesPlaceholder
 from langchain.tools import Tool
-from langchain import LLMChain
+from langchain import LLMChain, OpenAI
 from decouple import config
 from retrieval import SemanticScholarSearch
 
 
 OPEN_API_KEY = config('OPENAI_API_KEY')
-chat_llm = ChatOpenAI(temperature=0, openai_api_key=OPEN_API_KEY)
+chat_llm = OpenAI(model="gpt-4",,temperature=0, openai_api_key=OPEN_API_KEY)
 SEMANTIC_SCHOLAR_API_KEY = config('SEMANTIC_SCHOLAR_API_KEY')
 
 
