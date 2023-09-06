@@ -240,8 +240,9 @@ class ChatBot(discord.Client):
     async def set_system_prompt(self, prompt_choice, message):
         if prompt_choice == "default":
             self.system_prompt_dict[message.author] = self.default_sys
-            await message.channel.send(f"Your system prompt is set to:\n>>> {self.default_sys}\n\n")
-            await message.channel.send("If you would like to change or clear it, type `!custommode` or `!clearmode`, respectively.")
+            await self.send_msg("Your system prompt is set to:\n", message)
+            await self.send_msg(f"{self.default_sys}\n\n", message, prefix=">>> ")
+            await self.send_msg("If you would like to change or clear it, type `!custommode` or `!clearmode`, respectively.", message)
         elif prompt_choice == "bda":
             self.system_prompt_dict[message.author] = self.bda_sys
             await self.send_msg("Your system prompt is set to:\n", message)
