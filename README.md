@@ -14,7 +14,11 @@ The GPT_4_Biologist_ChatBot folder contains experiments to develop suitable syst
 ### Run Locally
 
 1. Clone the repository
-2. Put your OpenAI and Discord API keys in the .env file. 
+2. Create a `.env` file that includes your OpenAI and Discord API keys.
+```
+OPENAI_API_KEY = xxx
+DISCORD_TOKEN = xxx
+``` 
 3. Install the requirements
 4. Run python3 bot.py
 
