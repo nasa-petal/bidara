@@ -344,6 +344,9 @@ class ChatBot(discord.Client):
         if message.author not in self.conversations:
             self.conversations[message.author] = []
 
+        if message.author not in self.system_prompt_dict:
+            self.system_prompt_dict[message.author] = self.default_sys
+
         if input_content[0] == "!":
             await self.process_keyword(input_content[1:], message)
             return
