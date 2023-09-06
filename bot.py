@@ -227,7 +227,8 @@ class ChatBot(discord.Client):
     async def process_system_prompt(self, message):
         if message.author not in self.system_prompt_dict:
             self.system_prompt_dict[message.author] = self.default_sys
-        await message.channel.send((f"This is your current system prompt:\n>>> {self.system_prompt_dict[message.author]}"))
+        await self.send_msg("This is your current system prompt:\n", message)
+        await self.send_msg(f"{self.system_prompt_dict[message.author]}\n\n", message, prefix=">>> ")
 
     @to_thread
     def send_agent_msg(self, txt, message, prefix=""):
