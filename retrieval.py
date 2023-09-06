@@ -12,7 +12,7 @@ import openai
 Initialize SemanticScholar API Key and OpenAI model 
 '''
 OPEN_API_KEY = config('OPENAI_API_KEY')
-llm = OpenAI(temperature=0, openai_api_key=OPEN_API_KEY)
+llm = OpenAI(model="gpt-4", temperature=0, openai_api_key=OPEN_API_KEY)
 SEMANTIC_SCHOLAR_API_KEY = config('SEMANTIC_SCHOLAR_API_KEY')
 
 
@@ -22,27 +22,30 @@ Some of the retrieved papers do not have abstracts, so we combat this by retriev
 
 Returns a string that concatenates the title, authors, paper URL, and abstract for each paper
 '''
+
+
 def SemanticScholarSearch(query: str, number_of_papers_to_retrieve: int) -> str:
     URLtoGET = f'https://api.semanticscholar.org/graph/v1/paper/search?query={query}&limit={5*number_of_papers_to_retrieve}&fields=abstract,authors,title,url'
 
     headers = {
-            'Content-type': 'application/json',
-            'x-api-key': SEMANTIC_SCHOLAR_API_KEY
-        }
+        'Content-type': 'application/json',
+        'x-api-key': SEMANTIC_SCHOLAR_API_KEY
+    }
     GETresult = requests.get(URLtoGET, headers=headers)
     json_GETresult = json.loads(GETresult.text)
 
-    if 'code' in json_GETresult and json_GETresult['code']=='429':
-        raise ValueError("You have been rate-limited by Semantic Scholar. Please wait and try again or apply for a key for higher rate limits. https://www.semanticscholar.org/product/api#api-key-form")
+    if 'code' in json_GETresult and json_GETresult['code'] == '429':
+        raise ValueError(
+            "You have been rate-limited by Semantic Scholar. Please wait and try again or apply for a key for higher rate limits. https://www.semanticscholar.org/product/api#api-key-form")
     elif json_GETresult['total'] == 0:
-        return("No papers found \n")
+        return ("No papers found \n")
 
     all_papers = ""
 
     for paper in json_GETresult['data']:
         # if we've retrieved the amount of papers specified
         if number_of_papers_to_retrieve == 0:
-            break 
+            break
         # if no abstract
         if not paper["abstract"]:
             continue
@@ -52,6 +55,7 @@ def SemanticScholarSearch(query: str, number_of_papers_to_retrieve: int) -> str:
     all_papers += "\n"
 
     return all_papers
+
 
 '''
 Extracts search query from Biologize/Action/Search and search it on Semantic Scholar
@@ -63,8 +67,11 @@ chainOutput1 = {'biologize_action' :
 searchQueryExecutor(chainOutput1) -> SemanticScholarSearch("XYZ", 1) -> <Paper1Title> by <Paper1Authors>. <Paper1 URL>. Abstract: <Paper1Abstract> 
 
 '''
+
+
 def searchQueryExecutor(inputs: dict) -> dict:
-    search_query_output = re.findall(r"Search\[\+?(-?.+)\s*\]", inputs['biologize_action'])[0]
+    search_query_output = re.findall(
+        r"Search\[\+?(-?.+)\s*\]", inputs['biologize_action'])[0]
     response = SemanticScholarSearch(search_query_output, 2)
 
     return {'biologize_abstract_retrieved_paper': inputs['biologize_action'] + "\n" + response}
@@ -73,6 +80,8 @@ def searchQueryExecutor(inputs: dict) -> dict:
 '''
 Initializes a LangChain SequentialChain instance
 '''
+
+
 def intializeChain() -> SequentialChain:
     prompt_biologize = PromptTemplate(
         input_variables=['question'],
@@ -118,8 +127,8 @@ def intializeChain() -> SequentialChain:
             
             Only generate the Biologize and Action
             """
-        )
-    
+    )
+
     prompt_discoverAbstractAnswer = PromptTemplate(
         input_variables=['biologize_abstract_retrieved_paper'],
         template=""" \
@@ -162,17 +171,19 @@ def intializeChain() -> SequentialChain:
             
             Question: {biologize_abstract_retrieved_paper}
         """
-        )
+    )
 
-    chain_biologizeAction = LLMChain(llm=llm, prompt=prompt_biologize, output_key='biologize_action')
+    chain_biologizeAction = LLMChain(
+        llm=llm, prompt=prompt_biologize, output_key='biologize_action')
     chain_retriever = TransformChain(
         input_variables=["biologize_action"], output_variables=["biologize_abstract_retrieved_paper"], transform=searchQueryExecutor
     )
-    chain_discoverAbstractAnswer = LLMChain(llm=llm, prompt=prompt_discoverAbstractAnswer, output_key='discover_abstract_answer')
+    chain_discoverAbstractAnswer = LLMChain(
+        llm=llm, prompt=prompt_discoverAbstractAnswer, output_key='discover_abstract_answer')
 
-    overall_chain = SequentialChain(chains = [chain_biologizeAction, chain_retriever, chain_discoverAbstractAnswer], 
-                                input_variables=['question'],
-                                verbose = True,
-                                return_all=True)
-    
+    overall_chain = SequentialChain(chains=[chain_biologizeAction, chain_retriever, chain_discoverAbstractAnswer],
+                                    input_variables=['question'],
+                                    verbose=True,
+                                    return_all=True)
+
     return overall_chain
