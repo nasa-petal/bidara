@@ -137,10 +137,6 @@ class ChatBot(discord.Client):
                                      "`!examples` - show examples of what BIDARA can do.\n",
                                      "`!mode` - lists your current system prompt.\n",
                                      "`!defaultmode` - set your system prompt to the default BIDARA prompt.\n",
-                                     "`!definemode` - set your system prompt to one that instructs BIDARA to evaluate a given design challenge and offer suggested improvements using suggestions from the Design step from Biomimicry Institute's Biomimicry Design Process.\n",
-                                     "`!bdamode` - set your system prompt to one that instructs BIDARA to perform Biologize, Discover, and Abstract steps from Biomimicry Institute's Biomimicry Design Process on a given design challenge question.\n",
-                                     "`!retrievalmode` - use Semantic Scholar to look up journal articles.\n",
-                                     "`!agentmode` - AI Agent mode.\n",
                                      "`!explore` - set your system prompt to one that instructs BIDARA to find existing products or solutions to a given design challenge. \n",
                                      "`!custommode` - set a custom system prompt.\n",
                                      "`!clearmode` - clear your current system prompt.\n",
@@ -152,12 +148,7 @@ class ChatBot(discord.Client):
                                 "_user:_ How do organisms in nature reflect the color white?\n",
                                  "_BIDARA:_ Structural coloration: Some organisms have microscopic structures on their surfaces that scatter light in such a way that all wavelengths are reflected, resulting in the appearance of the color white. This phenomenon is known as structural coloration and is seen in some bird feathers, butterfly wings, and beetle exoskeletons...\n",
                                  "_user:_ What are some white beetles that use structural coloration?\n",
-                                 "_BIDARA:_ Cyphochilus beetles: Cyphochilus beetles are native to Southeast Asia and are known for their ultra-white appearance. Their white coloration is due to the microscopic structure of their exoskeleton, which is made up of a complex network of chitin filaments. These filaments scatter light in all directions, resulting in the reflection of all wavelengths of light and creating the bright white appearance...\n\n",
-                                 "**Offer suggestions to improve a given design challenge using `!definemode`**\n",
-                                 "_user:_ How can we make cycling safer?\n\n",
-                                 "**Biologize, Discover, and Abstract a design challenge using `!bdamode`**\n",
-                                 "_user:_ How can we make cyclists more visible at night?\n\n",
-                                 "**Give examples of existing products or solutions for a given design challenge using `!explore`**\n"])
+                                 "_BIDARA:_ Cyphochilus beetles: Cyphochilus beetles are native to Southeast Asia and are known for their ultra-white appearance. Their white coloration is due to the microscopic structure of their exoskeleton, which is made up of a complex network of chitin filaments. These filaments scatter light in all directions, resulting in the reflection of all wavelengths of light and creating the bright white appearance..."])
         self.retrieval_sys = "Few-shot prompt"
 
         # Prompt as described by LangChain CHAT_ZERO_SHOT_REACT_DESCRIPTION Agent
@@ -213,7 +204,7 @@ class ChatBot(discord.Client):
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=messages,
-            temperature=0,
+            temperature=0
         )
         return response
 
