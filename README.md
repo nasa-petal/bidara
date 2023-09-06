@@ -14,7 +14,7 @@ The GPT_4_Biologist_ChatBot folder contains experiments to develop suitable syst
 ### Run Locally
 
 1. Clone the repository
-2. Create a `.env` file that includes your OpenAI and Discord API keys.
+2. Create a `.env` file in the root directory of your cloned repository that includes your OpenAI and Discord API keys.
 ```
 OPENAI_API_KEY = xxx
 DISCORD_TOKEN = xxx
