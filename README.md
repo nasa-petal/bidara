@@ -18,6 +18,7 @@ The GPT_4_Biologist_ChatBot folder contains experiments to develop suitable syst
 ```
 OPENAI_API_KEY = xxx
 DISCORD_TOKEN = xxx
+SEMANTIC_SCHOLAR_API_KEY = xxx
 ``` 
 3. Install the requirements
 4. Run python3 bot.py
