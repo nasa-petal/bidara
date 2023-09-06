@@ -3,10 +3,6 @@
 BIDARA is a bot that utilizes GPT-4 to answer questions.
 Each question you ask will be redirected to Chat-GPT, and is part of a conversation with Chat-GPT.
 
-### Prompt Engineering with GPT-4
-
-The GPT_4_Biologist_ChatBot folder contains experiments to develop suitable system/assistant prompts for the discord bot to act as an AI Scientist Researcher.
-
 ### Commands
 
 - !help --> description of bot and commands.
