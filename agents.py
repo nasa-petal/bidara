@@ -10,8 +10,8 @@ from decouple import config
 from retrieval import SemanticScholarSearch
 
 
-OPEN_API_KEY = config('OPENAI_API_KEY')
-chat_llm = OpenAI(model="gpt-4",temperature=0, openai_api_key=OPEN_API_KEY)
+OPENAI_API_KEY = config('OPENAI_API_KEY')
+chat_llm = ChatOpenAI(model_name='gpt-4', temperature=0, openai_api_key=OPENAI_API_KEY) #OpenAI(model="gpt-4",temperature=0, openai_api_key=OPENAI_API_KEY)
 SEMANTIC_SCHOLAR_API_KEY = config('SEMANTIC_SCHOLAR_API_KEY')
 
 

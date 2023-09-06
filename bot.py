@@ -11,8 +11,8 @@ from agents import getTools, initAgent, convertAgentOutputToString
 
 
 DISCORD_TOKEN = config('DISCORD_TOKEN')
-OPEN_API_KEY = config('OPENAI_API_KEY')
-openai.api_key = OPEN_API_KEY
+OPENAI_API_KEY = config('OPENAI_API_KEY')
+openai.api_key = OPENAI_API_KEY
 
 intents = discord.Intents.default()
 # bot = commands.Bot(command_prefix='!', intents = intents)
@@ -139,7 +139,9 @@ class ChatBot(discord.Client):
                                      "`!defaultmode` - set your system prompt to the default BIDARA prompt.\n",
                                      "`!definemode` - set your system prompt to one that instructs BIDARA to evaluate a given design challenge and offer suggested improvements using suggestions from the Design step from Biomimicry Institute's Biomimicry Design Process.\n",
                                      "`!bdamode` - set your system prompt to one that instructs BIDARA to perform Biologize, Discover, and Abstract steps from Biomimicry Institute's Biomimicry Design Process on a given design challenge question.\n",
-                                     "`!explore` - set your system prompt to one that instructs BIDARA to find existing products or solutions to a given design challenge. \n"
+                                     "`!retrievalmode` - use Semantic Scholar to look up journal articles.\n",
+                                     "`!agentmode` - AI Agent mode.\n",
+                                     "`!explore` - set your system prompt to one that instructs BIDARA to find existing products or solutions to a given design challenge. \n",
                                      "`!custommode` - set a custom system prompt.\n",
                                      "`!clearmode` - clear your current system prompt.\n",
                                      "`!conv` - shows your current conversation.\n",
