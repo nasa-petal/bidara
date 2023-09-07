@@ -123,7 +123,7 @@ def intializeChain() -> SequentialChain:
             Abstract: The essential feature that makes the honeybee's temperature regulation successful is its use of evaporative cooling. In design terms, we can describe this strategy as follows: "A system uses a liquid (like water) distributed throughout its structure, and a method to promote evaporation, to cool the entire system." \n\
             Answer: Now, let's apply this strategy to the design of a car engine: The car engine could be designed to mimic the honeybee's evaporative cooling technique. This could involve a system where a coolant is distributed throughout the engine. A mechanism (like a fan) could then promote evaporation, cooling the engine. This design could potentially improve the efficiency of car engines by better managing heat. \n\
             
-            Question: {biologize_abstract_retrieved_paper}
+            Question: {question}
             
             Only generate the Biologize and Action
             """
