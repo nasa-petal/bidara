@@ -50,7 +50,7 @@ def SemanticScholarSearch(query: str, number_of_papers_to_retrieve: int) -> str:
         if not paper["abstract"]:
             continue
         number_of_papers_to_retrieve -= 1
-        all_papers += f"{paper['title']} by {', '.join([x['name'] for x in paper['authors']])}. {paper['url']} \n Abstract: \n {paper['abstract']}"
+        all_papers += f"**{paper['title']}** by {', '.join([x['name'] for x in paper['authors']])}. {paper['url']} \n Abstract: \n {paper['abstract']}\n"
 
     all_papers += "\n"
 
