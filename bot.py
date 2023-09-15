@@ -26,8 +26,24 @@ client = discord.Client(command_prefix='!', intents=intents)
 # intents.guild_messages = False
 intents.message_content = True
 
-def paperSearch(query) -> dict:
+# This function is a wrapper that uses the Semantic Scholar API to find and return a list of two papers related to the query.
+# May remove because redundant.
+def paperSearch(query):
     return SemanticScholarSearch(query, 2)
+
+def generateImage(prompt):
+    # Generate an image
+    response = openai.Image.create(
+        prompt=prompt,
+        model="image-alpha-001",
+        size="512x512",
+        response_format="url"
+    )
+
+    # Print the URL of the generated image
+    # with open('res.txt', 'w') as f:
+    #     f.write(response["data"][0]["url"])
+    return response["data"][0]["url"]
 
 class ChatBot(discord.Client):
 
@@ -244,6 +260,20 @@ class ChatBot(discord.Client):
                     "required": ["query"],
                 },
             },
+            {
+                "name": "generateImage",
+                "description": "Generate an image URL given a prompt.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "prompt": {
+                            "type": "string",
+                            "description": "Description of image to generate.", # Try to highlight the biomimetic features of the animal in the prompt.
+                        },
+                    },
+                    "required": ["prompt"],
+                },
+            }
         ]
         response = openai.ChatCompletion.create(
             model="gpt-4",
@@ -257,14 +287,20 @@ class ChatBot(discord.Client):
             # Step 3: call the function
             # Note: the JSON response may not always be valid; be sure to handle errors
             available_functions = {
-                "paperSearch" : paperSearch
+                "paperSearch" : paperSearch,
+                "generateImage" : generateImage
             }  # only one function in this example, but you can have multiple
             function_name = response_message["function_call"]["name"]
             function_to_call = available_functions[function_name]
             function_args = json.loads(response_message["function_call"]["arguments"])
-            function_response = function_to_call(
-                query=function_args.get("query"),
-            )
+            if function_name == "paperSearch":
+                function_response = function_to_call(
+                    query=function_args.get("query"),
+                )
+            else:
+                function_response = function_to_call(
+                    prompt=function_args.get("prompt"),
+                )
 
             # Step 4: send the info on the function call and function response to GPT
             messages.append(response_message)  # extend conversation with assistant's reply
