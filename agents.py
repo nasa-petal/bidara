@@ -10,9 +10,8 @@ from decouple import config
 from retrieval import SemanticScholarSearch
 
 OPENAI_API_KEY = config('OPENAI_API_KEY')
-chat_llm = ChatOpenAI(model_name='gpt-4', temperature=0, openai_api_key=OPENAI_API_KEY) #OpenAI(model="gpt-4",temperature=0, openai_api_key=OPENAI_API_KEY)
+chat_llm = ChatOpenAI(model_name='gpt-4', temperature=0, openai_api_key=OPENAI_API_KEY) # Don't use guidance.llms.OpenAI('gpt-4')
 SEMANTIC_SCHOLAR_API_KEY = config('SEMANTIC_SCHOLAR_API_KEY')
-
 
 def simpleSearchQueryExecutor(inputs: dict) -> dict:
     response = SemanticScholarSearch(inputs['question'], 2)
@@ -27,7 +26,7 @@ def getTools():
                          )
     biomimicry = LLMChain(llm=chat_llm,
                          prompt=PromptTemplate(input_variables=['question'],
-                                               template="Work through these steps with the user one step at a time.\n"
+                                               template="Work through these steps with the user and only output one step at a time.\n"
                         "1. Biologize - This is always the first step of the design process. Analyze the essential functions and context your design challenge must address. Reframe them in biological terms, so that you can “ask nature” for advice. The goal of this step is to arrive at one or more “How does nature…?” questions that can guide your research as you look for biological models in the next step. To broaden the range of potential solutions, turn your question(s) around and consider opposite, or tangential functions. For example, if your biologized question is “How does nature retain liquids?”, you could also ask “How does nature repel liquids?” because similar mechanisms could be at work in both scenarios (i.e. controlling the movement of a liquid). Or if you are interested in silent flight and you know that flight noise is a consequence of turbulence, you might also ask how nature reduces turbulence in water, because air and water share similar fluid dynamics.\n"
                         "2. Discover - Look for natural models (organisms and ecosystems) that need to address the same functions and context as your design solution. Identify the strategies used that support their survival and success. This step focuses on research and information gathering. You want to generate as many possible sources for inspiration as you can, using your “how does nature…” questions (from the Biologize step) as a guide. Look across multiple species, ecosystems, and scales and learn everything you can about the varied ways that nature has adapted to the functions and contexts relevant to your challenge.\n"
                         "3. Abstract - The last step in the design process. Carefully study the essential features or mechanisms that make the biological strategy successful. Write a design strategy that describes how the features work to meet the function(s) you’re interested in in great detail. Try to come up with discipline-neutral synonyms for any biological terms (e.g. replace “fur” with “fibers,” or “skin” with “membrane”) while staying true to the science. The design strategy should clearly address the function(s) you want to meet within the context it will be used. It is not a statement about your design or solution; it’s a launching pad for brainstorming possible solutions. Stay true to the biology. Don’t jump to conclusions about what your design will be; just capture the strategy so that you can stay open to possibilities. When you are done, review your design strategy with a critical eye. Have you included all of the pertinent information? Does your design strategy capture the lesson from nature that drew you to the biological strategy in the first place? Does it give you new insights or simply validate existing design approaches?\n\n"
@@ -115,7 +114,7 @@ def getTools():
         Tool.from_function(
             func=gpt.run,
             name="GPT",
-            description="Respond normally."
+            description="This tool gives a normal, FINAL ANSWER response to the user."
         ),
         Tool.from_function(
             func=biomimicry.run,

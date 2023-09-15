@@ -1,3 +1,4 @@
+import json
 import os
 import discord
 from discord.ext import commands
@@ -7,8 +8,8 @@ import functools
 import typing
 import asyncio
 from retrieval import intializeChain
-from agents import getTools, initAgent, convertAgentOutputToString
-
+from agents import getTools, initAgent, convertAgentOutputToString, simpleSearchQueryExecutor
+from retrieval import SemanticScholarSearch
 
 DISCORD_TOKEN = config('DISCORD_TOKEN')
 OPENAI_API_KEY = config('OPENAI_API_KEY')
@@ -25,6 +26,8 @@ client = discord.Client(command_prefix='!', intents=intents)
 # intents.guild_messages = False
 intents.message_content = True
 
+def paperSearch(query) -> dict:
+    return SemanticScholarSearch(query, 2)
 
 class ChatBot(discord.Client):
 
@@ -149,7 +152,18 @@ class ChatBot(discord.Client):
                                  "_BIDARA:_ Structural coloration: Some organisms have microscopic structures on their surfaces that scatter light in such a way that all wavelengths are reflected, resulting in the appearance of the color white. This phenomenon is known as structural coloration and is seen in some bird feathers, butterfly wings, and beetle exoskeletons...\n",
                                  "_user:_ What are some white beetles that use structural coloration?\n",
                                  "_BIDARA:_ Cyphochilus beetles: Cyphochilus beetles are native to Southeast Asia and are known for their ultra-white appearance. Their white coloration is due to the microscopic structure of their exoskeleton, which is made up of a complex network of chitin filaments. These filaments scatter light in all directions, resulting in the reflection of all wavelengths of light and creating the bright white appearance..."])
-        self.retrieval_sys = "Few-shot prompt"
+        self.retrieval_sys = ("You are BIDARA, a biomimetic designer and research assistant, and a leading expert in biomimicry, biology, engineering, industrial design, environmental science, physiology, and paleontology. Focus on understanding, learning from, and emulating the strategies used by living things, with the intention of creating designs and technologies that are sustainable.\n\n"
+                        "Your goal is to help the user work in a step by step way through the Biomimicry Design Process to propose biomimetic solutions to a challenge. Cite peer reviewed sources for your information.\n\n"
+                        "1. Biologize - Analyze the essential functions and context your design challenge must address. Reframe them in biological terms, so that you can “ask nature” for advice. The goal of this step is to arrive at one or more “How does nature…?” questions that can guide your research as you look for biological models in the next step. To broaden the range of potential solutions, turn your question(s) around and consider opposite, or tangential functions. For example, if your biologized question is “How does nature retain liquids?”, you could also ask “How does nature repel liquids?” because similar mechanisms could be at work in both scenarios (i.e. controlling the movement of a liquid). Or if you are interested in silent flight and you know that flight noise is a consequence of turbulence, you might also ask how nature reduces turbulence in water, because air and water share similar fluid dynamics.\n"
+                        "2. Discover - Look for natural models (organisms and ecosystems) that need to address the same functions and context as your design solution. Identify the strategies used that support their survival and success. This step focuses on research and information gathering. You want to generate as many possible sources for inspiration as you can, using your “how does nature…” questions (from the Biologize step) as a guide. Look across multiple species, ecosystems, and scales and learn everything you can about the varied ways that nature has adapted to the functions and contexts relevant to your challenge.\n"
+                        "3. Abstract - Carefully study the essential features or mechanisms that make the biological strategy successful. Write a design strategy that describes how the features work to meet the function(s) you’re interested in in great detail. Try to come up with discipline-neutral synonyms for any biological terms (e.g. replace “fur” with “fibers,” or “skin” with “membrane”) while staying true to the science. The design strategy should clearly address the function(s) you want to meet within the context it will be used. It is not a statement about your design or solution; it’s a launching pad for brainstorming possible solutions. Stay true to the biology. Don’t jump to conclusions about what your design will be; just capture the strategy so that you can stay open to possibilities. When you are done, review your design strategy with a critical eye. Have you included all of the pertinent information? Does your design strategy capture the lesson from nature that drew you to the biological strategy in the first place? Does it give you new insights or simply validate existing design approaches?\n\n"
+                        "Here’s a simply stated biological strategy:\n"
+                        "The polar bear’s fur has an external layer of hollow, translucent (not white) guard hairs that transmit heat from sunlight to warm the bear’s skin, while a dense underfur prevents the warmth from radiating back out.\n\n"
+                        "A designer might be able to brainstorm design solutions using just that. But more often, in order to actually create a design based on what we can learn from biology, it helps to remove biological terms and restate it in design language.\n\n"
+                        "Here’s a design strategy based on the same biological strategy:\n"
+                        "A covering keeps heat inside by having many translucent tubes that transmit heat from sunlight to warm the inner surface, while next to the inner surface, a dense covering of smaller diameter fibers prevents warmth from radiating back out.\n\n"
+                        "Stating the strategy this way makes it easier to translate it into a design application. (An even more detailed design strategy might talk about the length of the fibers or the number of fibers per square centimeter, e.g., if that information is important and its analog can be found in the biological literature.)")
+
 
         # Prompt as described by LangChain CHAT_ZERO_SHOT_REACT_DESCRIPTION Agent
         # Recreate with:
@@ -165,14 +179,14 @@ class ChatBot(discord.Client):
                         "Your goal is to help the user work in a step by step way through the Biomimicry Design Process to propose biomimetic solutions to a challenge. Please only state one step at a time and wait for the user's response. Cite peer reviewed sources for your information.\n\n"
                         "You have access to the following tools. Use only ONE tool in your response to the user:\n\n"
                         "Biomimicry: Start or continue working through the biomimicry design process consisting of step 1 biologize, step 2 discover, and step 3 abstract.\n\n"
-                        "GPT: This is a general tool that you can use to respond to the user normally. Only use it as a last ditch when you don't know what else to use-- so if you can't Biologize, Discover, or Abstract because the question is not engineering design related.\n"
+                        "GPT: This is a general tool that gives a typical response to the user. Only use it as a last ditch when you don't know what else to use-- so if you can't Biologize, Discover, or Abstract because the question is not engineering design related.\n"
                         "Paper Retrieval: If design ideas are needed, retrieve papers to find information from journal articles. Generate a query to an academic database.\n\n"
                           "The way you use the tools is by specifying a json blob.\n"
                           "Specifically, this json should have a `action` key (with the name of the tool to use) and a `action_input` key (with ONE SINGLE STRING input to the tool going here).\n\nThe only values that should be in the \"action\" field are: Biomimicry, Paper Retrieval, and GPT\n\n"
                           "The $JSON_BLOB should only contain a SINGLE action, do NOT return a list of multiple actions. Here is an example of a valid $JSON_BLOB, that you MUST follow:\n\n"
                           "```\n{{\n  \"action\": $TOOL_NAME,\n  \"action_input\": $INPUT\n}}\n```\n\nALWAYS use the following format:\n\n"
-                          "Question: the input question you must answer\nThought: you should always think about what to do\nAction:\n```\n$JSON_BLOB\n```\nObservation: the result of an action. Remember that this action output is what YOU, the AI, is saying, not the user. After one observation, say \nThought: I now know the final answer (Say this at the end of ANY biomimicry action OR GPT action OR if you need a user response)\n"
-                          "Final Answer: the final answer to the original input question, which you must give after one, a singular, step of the biomimicry design process or after one, a singular, GPT call. \n\nBegin! Reminder to always use the exact characters `Final Answer` when responding.")
+                          "Question: the input question you must answer\nThought: you should always think about what to do\nAction:\n```\n$JSON_BLOB\n```\nObservation: The result of an action. \nThought: I now know the final answer (Say this at the end of ANY biomimicry action OR GPT action OR if you need a user response)\n"
+                          "Final Answer: the final answer to the original input question. \n\nBegin! Reminder to always use the exact characters `Final Answer` when responding.")
 
         self.custom_sys = False
 
@@ -214,12 +228,58 @@ class ChatBot(discord.Client):
         return wrapper
 
     @to_thread
-    def call_openai(self, messages):
+    def call_openai(self, messages): # TODO: Integrate function-calling here
+        function_descriptions = [
+            {
+                "name": "paperSearch",
+                "description": "Retrieve papers with information from journal articles.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Query for an academic database.",
+                        },
+                    },
+                    "required": ["query"],
+                },
+            },
+        ]
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=messages,
-            temperature=0
+            temperature=0,
+            functions=function_descriptions,
+            # function_call="auto",
         )
+        response_message = response["choices"][0]["message"]
+        if response_message.get("function_call"):
+            # Step 3: call the function
+            # Note: the JSON response may not always be valid; be sure to handle errors
+            available_functions = {
+                "paperSearch" : paperSearch
+            }  # only one function in this example, but you can have multiple
+            function_name = response_message["function_call"]["name"]
+            function_to_call = available_functions[function_name]
+            function_args = json.loads(response_message["function_call"]["arguments"])
+            function_response = function_to_call(
+                query=function_args.get("query"),
+            )
+
+            # Step 4: send the info on the function call and function response to GPT
+            messages.append(response_message)  # extend conversation with assistant's reply
+            messages.append(
+                {
+                    "role": "function",
+                    "name": function_name,
+                    "content": function_response,
+                }
+            )  # extend conversation with function response
+            second_response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=messages,
+            )  # get a new response from GPT where it can see the function response
+            return second_response
         return response
 
     async def send_msg(self, txt, message, prefix=""):
@@ -337,26 +397,27 @@ class ChatBot(discord.Client):
         else:
             await message.channel.send("Not a valid commmand.")
 
+    # The "main" loop when someone sends a message
     async def on_message(self, message):
         # Check if a message is a DM
         # if isinstance(message.channel, discord.channel.DMChannel):
 
-        if message.author == self.user:
+        if message.author == self.user: # If I, the bot, just talked, obviously don't reply to myself
             return
 
         input_content = message.content
 
-        if message.author not in self.conversations:
+        if message.author not in self.conversations: # If somebody new starts talking to me, initialize a conversation for them
             self.conversations[message.author] = []
 
-        if message.author not in self.system_prompt_dict:
+        if message.author not in self.system_prompt_dict: # Change a new user's prompt to the default
             self.system_prompt_dict[message.author] = self.default_sys
 
-        if input_content[0] == "!":
+        if input_content[0] == "!": # If there is a Discord non-message (i.e. pins, channel name changes?) ignore
             await self.process_keyword(input_content[1:], message)
             return
 
-        elif self.custom_sys == True:
+        elif self.custom_sys == True: # This is confusing, but perhaps this is the code to ask the user for a custom prompt?
             self.custom_sys = False
             return
 
@@ -377,9 +438,10 @@ class ChatBot(discord.Client):
 
         self.get_chatgpt_messages(input_content, message.author)
 
+        # Display Discord typing indicator
         async with message.channel.typing():
             try:
-                response = await self.call_openai(self.conversations[message.author])
+                response = await self.call_openai(self.conversations[message.author]) # Try and fetch response from OpenAI
             except:
                 await message.channel.send("ChatGPT experienced an error generating a response. ChatGPT may be currently overloaded with other requests. Retry again after a short wait. If that doesn't work, maybe your conversation has grown too large, try `!clearconv` to clear it, then try again. Conversations are limited to a maximum of about 6000 words.")
             else:

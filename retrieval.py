@@ -1,5 +1,6 @@
 from langchain.chains import SequentialChain, TransformChain, LLMChain
 from langchain import OpenAI, LLMChain
+from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
 import re
 import requests
@@ -25,7 +26,7 @@ Returns a string that concatenates the title, authors, paper URL, and abstract f
 
 
 def SemanticScholarSearch(query: str, number_of_papers_to_retrieve: int) -> str:
-    URLtoGET = f'https://api.semanticscholar.org/graph/v1/paper/search?query={query}&limit={5*number_of_papers_to_retrieve}&fields=abstract,authors,title,url'
+    URLtoGET = f'https://api.semanticscholar.org/graph/v1/paper/search?query={query}&limit={5*number_of_papers_to_retrieve}&fields=abstract,authors,title,url' # Can add tldr for summary
 
     headers = {
         'Content-type': 'application/json',
