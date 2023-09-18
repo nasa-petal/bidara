@@ -147,7 +147,8 @@
       <workItem from="1694449789203" duration="6513000" />
       <workItem from="1694460015367" duration="10755000" />
       <workItem from="1694717255060" duration="12077000" />
-      <workItem from="1694804094308" duration="4106000" />
+      <workItem from="1694804094308" duration="5292000" />
+      <workItem from="1695074408872" duration="2308000" />
     </task>
     <servers />
   </component>
@@ -155,7 +156,7 @@
     <option name="version" value="3" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/discord_bot$bot.coverage" NAME="bot Coverage Results" MODIFIED="1694807581911" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/discord_bot$bot.coverage" NAME="bot Coverage Results" MODIFIED="1695076175189" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/discord_bot$agents.coverage" NAME="agents Coverage Results" MODIFIED="1694807575285" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/discord_bot$sandbox.coverage" NAME="sandbox Coverage Results" MODIFIED="1694807524901" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
