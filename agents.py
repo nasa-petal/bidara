@@ -165,8 +165,8 @@ def convertAgentOutputToString(sample_output: dict) -> str:
     final_string = ""
     for action in sample_output['intermediate_steps']:
         final_string += action[0].tool + ": " + \
-            action[0].tool_input + ": " + action[0].log + \
-            ": \n\n" + action[1] + "\n\n"
+            action[0].tool_input + "\n" + action[0].log + \
+            "\n\n" + action[1] + "\n\n"
     final_string += "Final Answer: \n\n" + sample_output['output']
 
     return final_string
