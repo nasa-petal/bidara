@@ -14,6 +14,7 @@ from retrieval import SemanticScholarSearch
 DISCORD_TOKEN = config('DISCORD_TOKEN')
 OPENAI_API_KEY = config('OPENAI_API_KEY')
 openai.api_key = OPENAI_API_KEY
+settingCustomKey = False
 
 intents = discord.Intents.default()
 # bot = commands.Bot(command_prefix='!', intents = intents)
@@ -148,7 +149,7 @@ class ChatBot(discord.Client):
             "You are knowledgable in all available products and technology. Come up with existing products or solutions for this design challenge.")
 
         self.instructions = "".join(["Welcome to BIDARA, a Bio-Inspired Design and Research Assistant AI chatbot that uses OpenAI’s GPT-4 model to respond to queries.\n",
-                                     "As you chat back and forth either through private messages or in #chat-with-bidara, BIDARA keeps track of all the messages between you and it as part of your unique conversation history. ",
+                                     "As you chat back and forth either through private messages or on this server, BIDARA keeps track of all the messages between you and it as part of your unique conversation history. ",
                                      "This allows it to respond to new queries based on the context of your conversation. Eventually your conversation will need to be cleared or OpenAI will not be able to generate new responses. ",
                                      "To clear the conversation, and start a new one, use the `!clearconv` command.\n\n",
                                      "BIDARA can be directed to perform certain tasks by selecting from one of the pre-configured modes or specifying one yourself. The default mode instructs BIDARA to assist in bio-inspired design and research activities. Behind the scenes, these modes enter instructions into GPT-4's system prompt. ",
@@ -166,6 +167,7 @@ class ChatBot(discord.Client):
                                      "`!clearmode` - clear your current system prompt.\n",
                                      "`!conv` - shows your current conversation.\n",
                                      "`!clearconv` - clear your current conversation.\n",
+                                     "`!setapikey` - Set your own OpenAI API key.\n",
                                      "\n\n"])
 
         self.examples = "".join(["**Bio-inspired non-toxic white paint using `!defaultmode`**\n",
@@ -435,6 +437,31 @@ class ChatBot(discord.Client):
                 await message.channel.send("Your previous conversation is cleared.")
         elif keyword == "examples":
             await self.send_msg(self.examples, message)
+        elif keyword == "setapikey":
+            await message.channel.send("Enter your OpenAI API Key (starts with \"sk-\"):")
+            def is_api_key_valid(msg):
+                self.settingCustomKey = True
+                openai.api_key = msg.content
+                try:
+                    response = openai.Completion.create(
+                        model="text-davinci-002",
+                        prompt="This is a test.",
+                        temperature=0
+                    )
+                except:
+                    return False
+                else:
+                    return True
+
+            msg = await client.wait_for("message")
+
+            if is_api_key_valid(msg):
+                await message.channel.send("OpenAI API key set!")
+            else:
+                await message.channel.send("This API key does not work. Could it be that you've mistyped the key or hit your usage limit?")
+            self.settingCustomKey = False
+        elif keyword == "curkey":
+            await message.channel.send("**[DEBUGGING PURPOSES ONLY]** The current API Key is: " + openai.api_key)
         else:
             await message.channel.send("Not a valid commmand.")
 
@@ -454,7 +481,7 @@ class ChatBot(discord.Client):
         if message.author not in self.system_prompt_dict: # Change a new user's prompt to the default
             self.system_prompt_dict[message.author] = self.default_sys
 
-        if input_content[0] == "!": # If there is a Discord non-message (i.e. pins, channel name changes?) ignore
+        if input_content[0] == "!": # If there is a Discord non-message (i.e. pins, channel name changes?), then ignore. Also process commands like !help
             await self.process_keyword(input_content[1:], message)
             return
 
@@ -479,19 +506,20 @@ class ChatBot(discord.Client):
 
         self.get_chatgpt_messages(input_content, message.author)
 
-        # Display Discord typing indicator
-        async with message.channel.typing():
-            try:
-                response = await self.call_openai(self.conversations[message.author]) # Try and fetch response from OpenAI
-            except:
-                await message.channel.send("ChatGPT experienced an error generating a response. ChatGPT may be currently overloaded with other requests. Retry again after a short wait. If that doesn't work, maybe your conversation has grown too large, try `!clearconv` to clear it, then try again. Conversations are limited to a maximum of about 6000 words.")
-            else:
-                assistant_response = response['choices'][0]['message']['content']
+        if not self.settingCustomKey:  # Don't want to go through this when setting a custom key
+            # Display Discord typing indicator
+            async with message.channel.typing():
+                try:
+                    response = await self.call_openai(self.conversations[message.author]) # Try and fetch response from OpenAI
+                except:
+                        await message.channel.send("ChatGPT experienced an error generating a response. ChatGPT may be currently overloaded with other requests. Retry again after a short wait. If that doesn't work, maybe your conversation has grown too large, try `!clearconv` to clear it, then try again. Conversations are limited to a maximum of about 6000 words.")
+                else:
+                    assistant_response = response['choices'][0]['message']['content']
 
-                self.conversations[message.author].append(
-                    {'role': 'assistant', 'content': assistant_response})
+                    self.conversations[message.author].append(
+                        {'role': 'assistant', 'content': assistant_response})
 
-                await self.send_msg(assistant_response, message)
+                    await self.send_msg(assistant_response, message)
 
 
 client = ChatBot(intents=intents)
