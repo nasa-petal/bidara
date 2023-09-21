@@ -14,7 +14,6 @@ from retrieval import SemanticScholarSearch
 DISCORD_TOKEN = config('DISCORD_TOKEN')
 OPENAI_API_KEY = config('OPENAI_API_KEY')
 openai.api_key = OPENAI_API_KEY
-settingCustomKey = False
 
 intents = discord.Intents.default()
 # bot = commands.Bot(command_prefix='!', intents = intents)
@@ -55,6 +54,7 @@ class ChatBot(discord.Client):
 
     def __init__(self, intents):
         super().__init__(intents=intents)
+        self.settingCustomKey = False
         self.system_prompt_dict = {}
         self.conversations = {}
         self.bda_sys = ("You are BIDARA, a biomimetic designer and research assistant, and a leading expert in biomimicry, biology, engineering, industrial design, environmental science, physiology, and paleontology. Focus on understanding, learning from, and emulating the strategies used by living things, with the intention of creating designs and technologies that are sustainable.\n\n"
@@ -437,8 +437,8 @@ class ChatBot(discord.Client):
                 await message.channel.send("Your previous conversation is cleared.")
         elif keyword == "examples":
             await self.send_msg(self.examples, message)
-        elif keyword == "setapikey":
-            await message.channel.send("Enter your OpenAI API Key (starts with \"sk-\"):")
+        elif keyword == "setapikey": # Let the user set their own API key so that they're not leeching off of our resources
+            await message.channel.send("**Enter your OpenAI API Key (starts with \"sk-\"):**")
             def is_api_key_valid(msg):
                 self.settingCustomKey = True
                 openai.api_key = msg.content
@@ -454,14 +454,14 @@ class ChatBot(discord.Client):
                     return True
 
             msg = await client.wait_for("message")
-
             if is_api_key_valid(msg):
                 await message.channel.send("OpenAI API key set!")
+                await msg.delete()
             else:
                 await message.channel.send("This API key does not work. Could it be that you've mistyped the key or hit your usage limit?")
             self.settingCustomKey = False
-        elif keyword == "curkey":
-            await message.channel.send("**[DEBUGGING PURPOSES ONLY]** The current API Key is: " + openai.api_key)
+        # elif keyword == "curkey":
+        #     await message.channel.send("**[DEBUGGING PURPOSES ONLY]** The current API Key is: " + openai.api_key)
         else:
             await message.channel.send("Not a valid commmand.")
 
