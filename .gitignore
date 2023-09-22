@@ -1,2 +1,4 @@
 .env
 sandbox.py
+.idea/
+__pycache__/

@@ -438,7 +438,7 @@ class ChatBot(discord.Client):
         elif keyword == "examples":
             await self.send_msg(self.examples, message)
         elif keyword == "setapikey": # Let the user set their own API key so that they're not leeching off of our resources
-            await message.channel.send("**Enter your OpenAI API Key (starts with \"sk-\"):**")
+            await message.channel.send("**Enter your OpenAI API Key (starts with \"sk-\"— to get a key, go [here](<https://platform.openai.com/account/api-keys>)):**")
             def is_api_key_valid(msg):
                 self.settingCustomKey = True
                 openai.api_key = msg.content
