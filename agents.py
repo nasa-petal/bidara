@@ -10,7 +10,7 @@ from decouple import config
 from retrieval import SemanticScholarSearch
 
 OPENAI_API_KEY = config('OPENAI_API_KEY')
-chat_llm = ChatOpenAI(model_name='gpt-4', temperature=0, openai_api_key=OPENAI_API_KEY) # Don't use guidance.llms.OpenAI('gpt-4')
+chat_llm = ChatOpenAI(model_name='gpt-4', temperature=0, openai_api_key=OPENAI_API_KEY)
 SEMANTIC_SCHOLAR_API_KEY = config('SEMANTIC_SCHOLAR_API_KEY')
 
 def simpleSearchQueryExecutor(inputs: dict) -> dict:

@@ -1,6 +1,6 @@
 from langchain.chains import SequentialChain, TransformChain, LLMChain
-from langchain import OpenAI, LLMChain
 from langchain.chat_models import ChatOpenAI
+from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 import re
 import requests
@@ -9,6 +9,14 @@ from decouple import config
 import requests
 import openai
 
+# Weird imports
+import os
+import logging
+from typing import List
+from llama_index.readers.schema.base import Document
+import arxiv
+
+
 '''
 Initialize SemanticScholar API Key and OpenAI model 
 '''
@@ -16,17 +24,113 @@ OPEN_API_KEY = config('OPENAI_API_KEY')
 llm = OpenAI(model="gpt-4", temperature=0, openai_api_key=OPEN_API_KEY)
 SEMANTIC_SCHOLAR_API_KEY = config('SEMANTIC_SCHOLAR_API_KEY')
 
+#=============================Code that I might use later===============================================================
+# base_dir = os.path.join(os.getcwd(), "pdfs")
+#
+# # Check if the directory exists, and if not, create it
+# if not os.path.exists(base_dir):
+#     os.makedirs(base_dir)
+#
+# def download_pdf(paper_id, url: str):
+#     logger = logging.getLogger()
+#     headers = {
+#         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+#     }
+#     # Making a GET request
+#     response = requests.get(url, headers=headers, stream=True)
+#     content_type = response.headers["Content-Type"]
+#
+#     # As long as the content-type is application/pdf, this will download the file
+#     if "application/pdf" in content_type:
+#         os.makedirs(base_dir, exist_ok=True)
+#         file_path = os.path.join(base_dir, f"{paper_id}.pdf")
+#         # check if the file already exists
+#         if os.path.exists(file_path):
+#             logger.info(f"{file_path} already exists")
+#             return file_path
+#         with open(file_path, "wb") as file:
+#             for chunk in response.iter_content(chunk_size=1024):
+#                 if chunk:
+#                     file.write(chunk)
+#         logger.info(f"Downloaded pdf from {url}")
+#         return file_path
+#     else:
+#         logger.warning(f"{url} was not downloaded: protected")
+#         return None
+#
+#
+# def get_full_text(paper_name):
+#     from PyPDF2 import PdfReader
+#
+#     """
+#     Gets the full text of the documents from Semantic Scholar
+#
+#     Parameters
+#     ----------
+#     documents: list
+#         The list of Document object that contains the search results
+#
+#     Returns
+#     -------
+#     list
+#         The list of Document object that contains the search results with full text
+#
+#     Raises
+#     ------
+#     Exception
+#         If there is an error while getting the full text
+#
+#     """
+#     full_text_docs = [] # List of "Documents"
+#     paper = SemanticScholarRetrieval(paper_name, 1)[0]
+#     print(paper)
+#     url = paper["openAccessPdf"]
+#     externalIds = paper["externalIds"]
+#     paper_id = paper["paperId"]
+#     file_path = None
+#     persist_dir = os.path.join(base_dir , f"{paper_id}.pdf")
+#
+#     if url and not os.path.exists(persist_dir):
+#         # Download the document first
+#         file_path = download_pdf(paper["paperId"], url, persist_dir)
+#
+#     if (
+#             not url
+#             and externalIds
+#             and "ArXiv" in externalIds
+#             and not os.path.exists(persist_dir)
+#     ):
+#         # download the pdf from arxiv
+#         file_path = download_pdf_from_arxiv(
+#             paper_id, externalIds["ArXiv"]
+#         )
+#
+#     # Then, check if it's a valid PDF. If it's not, skip to the next document.
+#     if file_path:
+#         try:
+#             pdf = PdfReader(open(file_path, "rb"))
+#         except Exception as e:
+#             logging.error(
+#                 f"Failed to read pdf with exception: {e}. Skipping document..."
+#             )
+#             print("Can't read")
+#           #  continue
+#
+#         text = ""
+#         for page in pdf.pages:
+#             text += page.extract_text()
+#         full_text_docs.append(Document(text=text, extra_info=paper))
+#     print(full_text_docs)
+#     return full_text_docs
+#
+#
+# def download_pdf_from_arxiv(paper_id, arxiv_id):
+#     paper = next(arxiv.Search(id_list=[arxiv_id], max_results=1).results())
+#     paper.download_pdf(dirpath=base_dir, filename=paper_id + ".pdf")
+#     return os.path.join(base_dir, f"{paper_id}.pdf")
 
-'''
-Takes two arguments as input: (1) The query to search Semantic Scholar and (2) The number of papers to retrieve.
-Some of the retrieved papers do not have abstracts, so we combat this by retrieving 5 times as many papers as requested, but stopping once we've reached the requested amount.
-
-Returns a string that concatenates the title, authors, paper URL, and abstract for each paper
-'''
-
-
-def SemanticScholarSearch(query: str, number_of_papers_to_retrieve: int) -> str:
-    URLtoGET = f'https://api.semanticscholar.org/graph/v1/paper/search?query={query}&limit={5*number_of_papers_to_retrieve}&fields=abstract,authors,title,url' # Can add tldr for summary
+def SemanticScholarRetrieval(query: str, number_of_papers_to_retrieve: int):
+    URLtoGET = f'https://api.semanticscholar.org/graph/v1/paper/search?query={query}&limit={5 * number_of_papers_to_retrieve}&fields=abstract,authors,title,url,openAccessPdf,externalIds'  # Can add tldr for summary or openAccessPdf (if isOpenAccess)
 
     headers = {
         'Content-type': 'application/json',
@@ -41,9 +145,22 @@ def SemanticScholarSearch(query: str, number_of_papers_to_retrieve: int) -> str:
     elif json_GETresult['total'] == 0:
         return ("No papers found \n")
 
+    return json_GETresult['data']
+
+'''
+Takes two arguments as input: (1) The query to search Semantic Scholar and (2) The number of papers to retrieve.
+Some of the retrieved papers do not have abstracts, so we combat this by retrieving 5 times as many papers as requested, but stopping once we've reached the requested amount.
+
+Returns a string that concatenates the title, authors, paper URL, and abstract for each paper
+'''
+
+
+def SemanticScholarSearch(query: str, number_of_papers_to_retrieve: int) -> str:
+    papers = SemanticScholarRetrieval(query, number_of_papers_to_retrieve)
+
     all_papers = ""
 
-    for paper in json_GETresult['data']:
+    for paper in papers:
         # if we've retrieved the amount of papers specified
         if number_of_papers_to_retrieve == 0:
             break
@@ -54,7 +171,7 @@ def SemanticScholarSearch(query: str, number_of_papers_to_retrieve: int) -> str:
         all_papers += f"**{paper['title']}** by {', '.join([x['name'] for x in paper['authors']])}. {paper['url']} \n Abstract: \n {paper['abstract']}\n"
 
     all_papers += "\n"
-
+    # print(all_papers) # Debugging purposes
     return all_papers
 
 

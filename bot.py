@@ -11,9 +11,25 @@ from retrieval import intializeChain
 from agents import getTools, initAgent, convertAgentOutputToString, simpleSearchQueryExecutor
 from retrieval import SemanticScholarSearch
 
+# New, unorganized imports below
+from llama_index.llms.ollama import Ollama
+from llama_index.query_engine import CitationQueryEngine
+from llama_index import (
+    VectorStoreIndex,
+    ServiceContext,
+)
+from llama_index.response.notebook_utils import display_response
+from llama_hub.semanticscholar.base import SemanticScholarReader
+from langchain.embeddings import OllamaEmbeddings
+
 DISCORD_TOKEN = config('DISCORD_TOKEN')
 OPENAI_API_KEY = config('OPENAI_API_KEY')
 openai.api_key = OPENAI_API_KEY
+
+# Now using Llama 2 for research paper shenanigans
+embed_model = None
+service_context = None
+query_engine = None
 
 intents = discord.Intents.default()
 # bot = commands.Bot(command_prefix='!', intents = intents)
@@ -49,6 +65,37 @@ def generateImage(prompt):
     # with open('res.txt', 'w') as f:
     #     f.write(response["data"][0]["url"])
     return response["data"][0]["url"]
+
+'''
+This function takes in a description of a research space (string, "bias in large language models," "penguins," etc.) and creates a query engine
+the user can ask more specific research questions to. Returns a string "Research space set!" on success
+'''
+def setResearchSpace(query_space):
+    global embed_model, service_context, query_engine
+    embed_model = OllamaEmbeddings(base_url="http://localhost:11434", model="llama2")
+    service_context = ServiceContext.from_defaults(
+        llm=Ollama(model="llama2"),
+        embed_model=embed_model
+    )
+    llm = Ollama(model="llama2")
+    s2reader = SemanticScholarReader()
+    # increase limit to get more documents
+    documents = s2reader.load_data(query=query_space, limit=5)
+
+    index = VectorStoreIndex.from_documents(documents, service_context=service_context)
+
+    query_engine = CitationQueryEngine.from_args(
+        index,
+        similarity_top_k=3,
+        citation_chunk_size=512,
+    )
+    return "Research space set to: " + "\"" + query_space + "\""
+
+def queryResearchSpace(query):
+    # query the citation query engine
+    response = query_engine.query(query)
+    # display_response(response, show_source=True, source_length=100, show_source_metadata=True)
+    return response.response + "\n" + response.get_formatted_sources()
 
 class ChatBot(discord.Client):
 
@@ -268,6 +315,34 @@ class ChatBot(discord.Client):
                 },
             },
             {
+                "name": "setResearchSpace",
+                "description": "Creates a query engine the user can ask specific research questions to in regards to a research space. Run this before queryResearchSpace()",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query_space": {
+                            "type": "string",
+                            "description": "Description of an overarching research space (i.e. 'bias in large language models,' 'biomimicry for aerospace,' etc.).",
+                        },
+                    },
+                    "required": ["query_space"],
+                },
+            },
+            {
+                "name": "queryResearchSpace",
+                "description": "With regards to a specific research space (created by running setResearchSpace()) first), ask a specific question. Returns the answer according to the sources in the space.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Query for the citation query engine.",
+                        },
+                    },
+                    "required": ["query"],
+                },
+            },
+            {
                 "name": "generateImage",
                 "description": "Generate an image URL given a prompt. When linking the image, do not include the '!' before the markdown [Description](Link).", # The additional instruction does not work
                 "parameters": {
@@ -293,16 +368,22 @@ class ChatBot(discord.Client):
         if response_message.get("function_call"):
             # Call the function
             # Note: the JSON response may not always be valid; be sure to handle errors
-            available_functions = {
+            available_functions = { # REMEMBER to update this when functions are updated
                 "paperSearch" : paperSearch,
-                "generateImage" : generateImage
+                "generateImage" : generateImage,
+                "setResearchSpace": setResearchSpace,
+                "queryResearchSpace": queryResearchSpace
             }  # only one function in this example, but you can have multiple
             function_name = response_message["function_call"]["name"]
             function_to_call = available_functions[function_name]
             function_args = json.loads(response_message["function_call"]["arguments"])
-            if function_name == "paperSearch":
+            if function_name == "paperSearch" or function_name == "queryResearchSpace":
                 function_response = function_to_call(
                     query=function_args.get("query"),
+                )
+            elif function_name == "setResearchSpace":
+                function_response = function_to_call(
+                    query_space=function_args.get("query_space"),
                 )
             else:
                 function_response = function_to_call(
