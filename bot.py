@@ -21,6 +21,12 @@ from llama_index import (
 from llama_index.response.notebook_utils import display_response
 from llama_hub.semanticscholar.base import SemanticScholarReader
 from langchain.embeddings import OllamaEmbeddings
+from utils import (
+    create_index,
+    get_chat_engine,
+    citation_query_engine,
+    generate_sample_questions,
+)
 
 DISCORD_TOKEN = config('DISCORD_TOKEN')
 OPENAI_API_KEY = config('OPENAI_API_KEY')
@@ -29,7 +35,7 @@ openai.api_key = OPENAI_API_KEY
 # Now using Llama 2 for research paper shenanigans
 embed_model = None
 service_context = None
-query_engine = None
+chat_engine = None
 
 intents = discord.Intents.default()
 # bot = commands.Bot(command_prefix='!', intents = intents)
@@ -68,34 +74,23 @@ def generateImage(prompt):
 
 '''
 This function takes in a description of a research space (string, "bias in large language models," "penguins," etc.) and creates a query engine
-the user can ask more specific research questions to. Returns a string "Research space set!" on success
+the user can ask more specific research questions to. Returns a string informing that research space is set and list of sample questions to ask on success
 '''
-def setResearchSpace(query_space):
-    global embed_model, service_context, query_engine
-    embed_model = OllamaEmbeddings(base_url="http://localhost:11434", model="llama2")
-    service_context = ServiceContext.from_defaults(
-        llm=Ollama(model="llama2"),
-        embed_model=embed_model
+def setResearchSpace(research_space_query):
+    global chat_engine
+    index, documents = create_index(
+        research_space_query.lower(), 1, True # Can increase num_papers later
     )
-    llm = Ollama(model="llama2")
-    s2reader = SemanticScholarReader()
-    # increase limit to get more documents
-    documents = s2reader.load_data(query=query_space, limit=5)
-
-    index = VectorStoreIndex.from_documents(documents, service_context=service_context)
-
-    query_engine = CitationQueryEngine.from_args(
-        index,
-        similarity_top_k=3,
-        citation_chunk_size=512,
-    )
-    return "Research space set to: " + "\"" + query_space + "\""
+    sample_questions = generate_sample_questions(documents)
+    chat_engine = citation_query_engine(index, 10, False, 512)
+    return "Research space successfully set to: " + "\"" + research_space_query + "\"" + "!\n" + "Questions to consider:\n" + sample_questions
 
 def queryResearchSpace(query):
     # query the citation query engine
-    response = query_engine.query(query)
+    response = chat_engine.query("Elaborate on " + query)
     # display_response(response, show_source=True, source_length=100, show_source_metadata=True)
     return response.response + "\n" + response.get_formatted_sources()
+
 
 class ChatBot(discord.Client):
 
@@ -316,16 +311,16 @@ class ChatBot(discord.Client):
             },
             {
                 "name": "setResearchSpace",
-                "description": "Creates a query engine the user can ask specific research questions to in regards to a research space. Run this before queryResearchSpace()",
+                "description": "Creates a query engine the user can ask specific research questions to in regards to papers in a research space. Run this before queryResearchSpace(). Returns a list of sample questions on success. List these suggestions to the user.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "query_space": {
+                        "research_space_query": {
                             "type": "string",
                             "description": "Description of an overarching research space (i.e. 'bias in large language models,' 'biomimicry for aerospace,' etc.).",
                         },
                     },
-                    "required": ["query_space"],
+                    "required": ["research_space_query"],
                 },
             },
             {
@@ -383,7 +378,7 @@ class ChatBot(discord.Client):
                 )
             elif function_name == "setResearchSpace":
                 function_response = function_to_call(
-                    query_space=function_args.get("query_space"),
+                    research_space_query=function_args.get("research_space_query"),
                 )
             else:
                 function_response = function_to_call(

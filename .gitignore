@@ -2,5 +2,8 @@
 sandbox.py
 ScholarQA.py
 utils.py
+
 .idea/
 __pycache__/
+citation*
+pdfs/
