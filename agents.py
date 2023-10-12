@@ -10,8 +10,9 @@ from decouple import config
 from retrieval import SemanticScholarSearch
 
 
-OPENAI_API_KEY = config('OPENAI_API_KEY')
-chat_llm = ChatOpenAI(model_name='gpt-4', temperature=0, openai_api_key=OPENAI_API_KEY) #OpenAI(model="gpt-4",temperature=0, openai_api_key=OPENAI_API_KEY)
+OPEN_API_KEY = config('OPENAI_API_KEY')
+chat_llm = ChatOpenAI(model="gpt-4",  temperature=0,
+                      openai_api_key=OPEN_API_KEY)
 SEMANTIC_SCHOLAR_API_KEY = config('SEMANTIC_SCHOLAR_API_KEY')
 
 
@@ -41,9 +42,7 @@ def getTools():
                                               template="Look for natural models (organisms and ecosystems) that \
                     need to address the same functions and context as your design solution. \
                     Identify the strategies used that support their survival and success. \
-                    This step focuses on research and information gathering. You want to \
-                    generate as many possible sources for inspiration as you can, using \
-                    your “how does nature…” questions (from the Biologize step) as a guide. \
+                    This step focuses on research and information gathering. \
                     Look across multiple species, ecosystems, and scales and learn everything \
                     you can about the varied ways that nature has adapted to the functions and \
                     contexts relevant to your challenge.\n {question}")
@@ -73,10 +72,7 @@ def getTools():
                     then applying those insights to the challenges humans want to solve. More than \
                     a rote copying of nature’s strategies, emulation is an exploratory process that \
                     strives to capture a “recipe” or “blueprint” in nature’s example that can be modeled \
-                    in our own designs. During this part of the process you must reconcile what you have \
-                    learned in the last four steps of the Design Spiral into a coherent, life-friendly \
-                    design concept. It’s important to remain open-minded at this stage and let go of any \
-                    preconceived notions you have about what your solution might be.\n {question}")
+                    in our own designs.\n {question}")
                        )
 
     evaluate = LLMChain(llm=chat_llm,
@@ -146,12 +142,12 @@ def initAgent(tools):
     agent = initialize_agent(
         tools,
         chat_llm,
-        agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
         verbose=True,
         return_all=True,
         agent_kwargs={
             "memory_prompts": [chat_history],
-            "input_variables": ["input", "agent_scratchpad"]
+            "input_variables": ["input", "agent_scratchpad"],
         },
         return_intermediate_steps=True,
         memory=memory
@@ -168,7 +164,9 @@ def convertAgentOutputToString(sample_output: dict) -> str:
 
     final_string = ""
     for action in sample_output['intermediate_steps']:
-        final_string += action[0].tool + ": \n\n" + action[1] + "\n\n"
+        final_string += action[0].tool + ": " + \
+            action[0].tool_input + "\n" + action[0].log + \
+            "\n\n" + action[1] + "\n\n"
     final_string += "Final Answer: \n\n" + sample_output['output']
 
     return final_string
