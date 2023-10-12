@@ -10,22 +10,14 @@ import asyncio
 from retrieval import intializeChain
 from agents import getTools, initAgent, convertAgentOutputToString, simpleSearchQueryExecutor
 from retrieval import SemanticScholarSearch
-
 # New, unorganized imports below
-from llama_index.llms.ollama import Ollama
-from llama_index.query_engine import CitationQueryEngine
-from llama_index import (
-    VectorStoreIndex,
-    ServiceContext,
-)
-from llama_index.response.notebook_utils import display_response
-from llama_hub.semanticscholar.base import SemanticScholarReader
-from langchain.embeddings import OllamaEmbeddings
 from utils import (
     create_index,
     get_chat_engine,
     citation_query_engine,
     generate_sample_questions,
+    delete_folders_starting_with,
+    empty_folder
 )
 
 DISCORD_TOKEN = config('DISCORD_TOKEN')
@@ -79,7 +71,7 @@ the user can ask more specific research questions to. Returns a string informing
 def setResearchSpace(research_space_query):
     global chat_engine
     index, documents = create_index(
-        research_space_query.lower(), 1, True # Can increase num_papers later
+        research_space_query.lower(), 5, True # Can increase num_papers later
     )
     sample_questions = generate_sample_questions(documents)
     chat_engine = citation_query_engine(index, 10, False, 512)
@@ -96,6 +88,10 @@ class ChatBot(discord.Client):
 
     def __init__(self, intents):
         super().__init__(intents=intents)
+        # Delete folders starting with "citation"
+        delete_folders_starting_with("citation")
+        # Empty the "pdfs" folder
+        empty_folder("pdfs")
         self.settingCustomKey = False
         self.system_prompt_dict = {}
         self.conversations = {}
@@ -472,7 +468,7 @@ class ChatBot(discord.Client):
             self.system_prompt_dict[message.author] = msg.content
             await message.channel.send(f"Your system prompt is set to:\n>>> {msg.content}")
 
-    async def list_conv(self, message):
+    async def list_conv(self, message): # I think this is broken
         curr_conversation = self.conversations[message.author]
         if curr_conversation == []:
             await message.channel.send("No conversation currently.")

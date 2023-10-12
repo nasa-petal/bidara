@@ -1,7 +1,7 @@
 .env
 sandbox.py
 ScholarQA.py
-utils.py
+
 
 .idea/
 __pycache__/
