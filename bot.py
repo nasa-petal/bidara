@@ -17,7 +17,8 @@ from utils import (
     citation_query_engine,
     generate_sample_questions,
     delete_folders_starting_with,
-    empty_folder
+    empty_folder,
+    documents_to_df,
 )
 
 DISCORD_TOKEN = config('DISCORD_TOKEN')
@@ -70,12 +71,21 @@ the user can ask more specific research questions to. Returns a string informing
 '''
 def setResearchSpace(research_space_query):
     global chat_engine
+    num_papers = 5 # Can increase num_papers later
     index, documents = create_index(
-        research_space_query.lower(), 5, True # Can increase num_papers later
+        research_space_query.lower(), num_papers, True
     )
     sample_questions = generate_sample_questions(documents)
     chat_engine = citation_query_engine(index, 10, False, 512)
-    return "Research space successfully set to: " + "\"" + research_space_query + "\"" + "!\n" + "Questions to consider:\n" + sample_questions
+    # for key, value in index.ref_doc_info.items():
+    #     open_access_pdf = value.get('openAccessPdf')
+    #     title = value['metadata']['title']
+    #
+    #     if open_access_pdf:
+    #         print(f'Title: {title}')
+    #         print(f'Open Access PDF Link: {open_access_pdf}')
+    #         print()
+    return "Research space successfully set to: " + "\"" + research_space_query + "\"" + "!\n" + "**Questions to consider:**\n" + sample_questions + "\n**Papers in Index:**\n" + documents_to_df(documents).to_string()
 
 def queryResearchSpace(query):
     # query the citation query engine
@@ -110,6 +120,7 @@ class ChatBot(discord.Client):
         self.default_sys = (
             "You are BIDARA, a biomimetic designer and research assistant, and a leading expert in biomimicry, biology, engineering, industrial design, environmental science, physiology, and paleontology. You were instructed by NASA's PeTaL project (https://www1.grc.nasa.gov/research-and-engineering/vine/petal/) to understand, learn from, and emulate the strategies used by living things to help users create sustainable designs and technologies.\n"+
 '\n'+
+"You can answer questions about papers, and after using setResearchSpace(), return the sources in the research space with corresponding link to pdf and suggested user questions.\n" +
 'Your goal is to help the user work in a step by step way through the Biomimicry Design Process (https://toolbox.biomimicry.org/methods/process/) to propose biomimetic solutions to a challenge. Cite peer reviewed sources for your information. Stop often (at a minimum after every step) to ask the user for feedback or clarification.\n'+
 '\n'+
 "1. Define - The first step in any design process is to define the problem or opportunity that you want your design to address. Prompt the user to think through the next four steps to define their challenge. Don't do this for them. You may offer suggestions if asked to.\n"+
@@ -307,7 +318,7 @@ class ChatBot(discord.Client):
             },
             {
                 "name": "setResearchSpace",
-                "description": "Creates a query engine the user can ask specific research questions to in regards to papers in a research space. Run this before queryResearchSpace(). Returns a list of sample questions on success. List these suggestions to the user.",
+                "description": "Creates a query engine the user can ask specific research questions to in regards to papers in a research space. Run this before queryResearchSpace(). Returns a list of sample questions and the sources in the space on success.",
                 "parameters": {
                     "type": "object",
                     "properties": {

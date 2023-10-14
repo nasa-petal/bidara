@@ -23,10 +23,20 @@ import random
 import shutil
 from llama_index.retrievers import BM25Retriever
 from decouple import config
+import pandas as pd
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
+
+def documents_to_df(documents):
+    # convert document objects to dataframe
+    list_data = []
+    for i, doc in enumerate(documents):
+        list_data.append(doc.extra_info.copy())
+
+    df = pd.DataFrame(list_data)
+    return df
 def delete_folders_starting_with(prefix):
     for folder in os.listdir():
         if os.path.isdir(folder) and folder.startswith(prefix):
