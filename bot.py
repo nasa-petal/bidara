@@ -22,8 +22,9 @@ from utils import (
 )
 
 DISCORD_TOKEN = config('DISCORD_TOKEN')
-OPENAI_API_KEY = config('OPENAI_API_KEY')
-openai.api_key = OPENAI_API_KEY
+
+api_keys_dict = {'default' : config('OPENAI_API_KEY')} # Dictionary to keep track of all API keys
+openai.api_key = api_keys_dict['default']
 
 # Now using Llama 2 for research paper shenanigans
 embed_model = None
@@ -524,7 +525,8 @@ class ChatBot(discord.Client):
             await message.channel.send("**Enter your OpenAI API Key (starts with \"sk-\"— to get a key, go [here](<https://platform.openai.com/account/api-keys>)):**")
             def is_api_key_valid(msg):
                 self.settingCustomKey = True
-                openai.api_key = msg.content
+                api_keys_dict[message.author] = msg.content
+                openai.api_key = api_keys_dict[message.author]
                 try:
                     response = openai.Completion.create(
                         model="text-davinci-002",
@@ -543,8 +545,12 @@ class ChatBot(discord.Client):
             else:
                 await message.channel.send("This API key does not work. Could it be that you've mistyped the key or hit your usage limit?")
             self.settingCustomKey = False
-        # elif keyword == "curkey":
-        #     await message.channel.send("**[DEBUGGING PURPOSES ONLY]** The current API Key is: " + openai.api_key)
+        elif keyword == "curkey":
+            if message.author in api_keys_dict:  # Use the key provided by each user
+                openai.api_key = api_keys_dict[message.author]
+            else:  # No key provided, use default key for now
+                openai.api_key = api_keys_dict['default']
+            await message.channel.send("**[DEBUGGING PURPOSES ONLY]** The current API Key is: " + openai.api_key)
         else:
             await message.channel.send("Not a valid commmand.")
 
@@ -591,11 +597,15 @@ class ChatBot(discord.Client):
 
         if not self.settingCustomKey:  # Don't want to go through this when setting a custom key
             # Display Discord typing indicator
-            if message.author in self.conversations and len(self.conversations[message.author]) > 10:  # Clearing oldest conversation memory
+            if message.author in self.conversations and len(self.conversations[message.author]) > 10:  # Clearing oldest conversation memory, TODO: More systematic way to do this
                 # self.system_prompt_dict[message.author] = ""
-                self.conversations[message.author] = self.conversations[message.author][1:]
+                self.conversations[message.author] = self.conversations[message.author][2:]
             async with message.channel.typing():
                 try:
+                    if message.author in api_keys_dict: # Use the key provided by each user
+                        openai.api_key = api_keys_dict[message.author]
+                    else: # No key provided, use default key for now
+                        openai.api_key = api_keys_dict['default']
                     response = await self.call_openai(self.conversations[message.author]) # Try and fetch response from OpenAI
                 except:
                     await message.channel.send("ChatGPT experienced an error generating a response. ChatGPT may be currently overloaded with other requests. Retry again after a short wait. If that doesn't work, maybe your conversation has grown too large, try `!clearconv` to clear it, then try again. Conversations are limited to a maximum of about 6000 words.")
