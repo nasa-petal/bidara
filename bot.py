@@ -591,11 +591,14 @@ class ChatBot(discord.Client):
 
         if not self.settingCustomKey:  # Don't want to go through this when setting a custom key
             # Display Discord typing indicator
+            if message.author in self.conversations and len(self.conversations[message.author]) > 10:  # Clearing oldest conversation memory
+                # self.system_prompt_dict[message.author] = ""
+                self.conversations[message.author] = self.conversations[message.author][1:]
             async with message.channel.typing():
                 try:
                     response = await self.call_openai(self.conversations[message.author]) # Try and fetch response from OpenAI
                 except:
-                        await message.channel.send("ChatGPT experienced an error generating a response. ChatGPT may be currently overloaded with other requests. Retry again after a short wait. If that doesn't work, maybe your conversation has grown too large, try `!clearconv` to clear it, then try again. Conversations are limited to a maximum of about 6000 words.")
+                    await message.channel.send("ChatGPT experienced an error generating a response. ChatGPT may be currently overloaded with other requests. Retry again after a short wait. If that doesn't work, maybe your conversation has grown too large, try `!clearconv` to clear it, then try again. Conversations are limited to a maximum of about 6000 words.")
                 else:
                     assistant_response = response['choices'][0]['message']['content']
 
