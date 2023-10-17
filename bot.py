@@ -545,12 +545,13 @@ class ChatBot(discord.Client):
             else:
                 await message.channel.send("This API key does not work. Could it be that you've mistyped the key or hit your usage limit?")
             self.settingCustomKey = False
-        elif keyword == "curkey":
-            if message.author in api_keys_dict:  # Use the key provided by each user
-                openai.api_key = api_keys_dict[message.author]
-            else:  # No key provided, use default key for now
-                openai.api_key = api_keys_dict['default']
-            await message.channel.send("**[DEBUGGING PURPOSES ONLY]** The current API Key is: " + openai.api_key)
+        # elif keyword == "curkey":
+        #     if message.author in api_keys_dict:  # Use the key provided by each user
+        #         openai.api_key = api_keys_dict[message.author]
+        #     else:  # No key provided, use default key for now
+        #         openai.api_key = api_keys_dict['default']
+        #     await message.channel.send("**[DEBUGGING PURPOSES ONLY]** The current API Key is: " + openai.api_key)
+        #     await message.channel.send(api_keys_dict)
         else:
             await message.channel.send("Not a valid commmand.")
 
