@@ -20,6 +20,7 @@ from utils import (
     empty_folder,
     documents_to_df,
 )
+from serpapi import GoogleSearch
 
 DISCORD_TOKEN = config('DISCORD_TOKEN')
 
@@ -41,6 +42,23 @@ client = discord.Client(command_prefix='!', intents=intents)
 # turn off messages from guilds, so you only get messages from DM channels
 # intents.guild_messages = False
 intents.message_content = True
+
+def patentSearch(query):
+    params = {
+        "engine": "google_patents",
+        "q": query,
+        "api_key": config('SERP_API_KEY')
+    }
+
+    search = GoogleSearch(params)
+    res = search.get_dict()
+    ans = ""
+    for i in range(5):
+        ans += "**" + res["organic_results"][i]["title"] + "**\n"
+        ans += res["organic_results"][i]["inventor"] + "\n"
+        ans += res["organic_results"][i]["pdf"] + "\n"
+        ans += res["organic_results"][i]["thumbnail"] + "\n\n"
+    return ans
 
 '''
 This function is a wrapper that uses the Semantic Scholar API to find and return a list of two papers related to the query.
@@ -93,7 +111,6 @@ def queryResearchSpace(query):
     response = chat_engine.query("Elaborate on " + query)
     # display_response(response, show_source=True, source_length=100, show_source_metadata=True)
     return response.response + "\n" + response.get_formatted_sources()
-
 
 class ChatBot(discord.Client):
 
@@ -319,7 +336,7 @@ class ChatBot(discord.Client):
             },
             {
                 "name": "setResearchSpace",
-                "description": "Only call this function when the user says 'Set research space to...' Creates a query engine the user can ask specific research questions to in regards to papers in a research space. Run this before queryResearchSpace(). Return the sources in the research space with corresponding links to pdfs and list of suggested questions to the user.",
+                "description": "Only call this function when the user says 'Set research space to...' Creates a query engine the user can ask specific research questions with regard to papers in a research space. Run this before queryResearchSpace(). Return the sources in the research space with corresponding links and list of suggested questions to the user.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -358,7 +375,21 @@ class ChatBot(discord.Client):
                     },
                     "required": ["prompt"],
                 },
-            }
+            },
+        {
+            "name": "patentSearch",
+            "description": "Retrieves five patents and their links/thumbnails from Google Patents with a given query. Return this answer to the user verbatim.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Query for the patent search engine",
+                    },
+                },
+                "required": ["query"],
+            },
+        }
         ]
         response = openai.ChatCompletion.create(
             model="gpt-4",
@@ -375,14 +406,15 @@ class ChatBot(discord.Client):
                 "paperSearch" : paperSearch,
                 "generateImage" : generateImage,
                 "setResearchSpace": setResearchSpace,
-                "queryResearchSpace": queryResearchSpace
+                "queryResearchSpace": queryResearchSpace,
+                "patentSearch" : patentSearch
             }  # only one function in this example, but you can have multiple
             function_name = response_message["function_call"]["name"]
             function_to_call = available_functions[function_name]
             function_args = json.loads(response_message["function_call"]["arguments"])
-            if function_name == "paperSearch" or function_name == "queryResearchSpace":
+            if function_name == "generateImage":
                 function_response = function_to_call(
-                    query=function_args.get("query"),
+                    prompt=function_args.get("prompt"),
                 )
             elif function_name == "setResearchSpace":
                 function_response = function_to_call(
@@ -390,7 +422,7 @@ class ChatBot(discord.Client):
                 )
             else:
                 function_response = function_to_call(
-                    prompt=function_args.get("prompt"),
+                    query=function_args.get("query"),
                 )
 
             # Send the info on the function call and function response to GPT
