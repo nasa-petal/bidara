@@ -13,6 +13,7 @@ from utils import (
     empty_folder,
 )
 from functions import (
+    function_descriptions,
     paperSearch,
     setResearchSpace,
     queryResearchSpace,
@@ -248,78 +249,6 @@ class ChatBot(discord.Client):
 
     @to_thread
     def call_openai(self, messages):
-        function_descriptions = [ # Self-explanatory functions for OpenAI function calling.
-            {
-                "name": "paperSearch",
-                "description": "Retrieve papers with information from journal articles.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "Query for an academic database.",
-                        },
-                    },
-                    "required": ["query"],
-                },
-            },
-            {
-                "name": "setResearchSpace",
-                "description": "Only call this function when the user says 'Set research space to...' Creates a query engine the user can ask specific research questions with regard to papers in a research space. Run this before queryResearchSpace(). Return the sources in the research space with corresponding links and list of suggested questions to the user.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "research_space_query": {
-                            "type": "string",
-                            "description": "Description of an overarching research space (i.e. 'bias in large language models,' 'biomimicry for aerospace,' etc.).",
-                        },
-                    },
-                    "required": ["research_space_query"],
-                },
-            },
-            {
-                "name": "queryResearchSpace",
-                "description": "With regards to a specific research space (created by running setResearchSpace()) first), ask a specific question. Returns the answer according to the sources in the space. If the answer to the question is not directly provided, tell the user that the research space does not contain that information. Remember to cite your sources!",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "Query for the citation query engine.",
-                        },
-                    },
-                    "required": ["query"],
-                },
-            },
-            {
-                "name": "generateImage",
-                "description": "Generate an image URL given a prompt. When linking the image, do not include the '!' before the markdown [Description](Link).", # The additional instruction does not work
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "prompt": {
-                            "type": "string",
-                            "description": "Description of image to generate.", # Try to highlight the biomimetic features of the animal in the prompt.
-                        },
-                    },
-                    "required": ["prompt"],
-                },
-            },
-        {
-            "name": "patentSearch",
-            "description": "Retrieves five patents and their links/thumbnails from Google Patents with a given query. Return this answer to the user verbatim.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Query for the patent search engine",
-                    },
-                },
-                "required": ["query"],
-            },
-        }
-        ]
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=messages,
