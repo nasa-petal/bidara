@@ -1,7 +1,11 @@
 # BIDARA : Bio-Inspired Design and Research Assistant
 
-BIDARA is a bot that utilizes GPT-4 to answer questions.
-Each question you ask will be redirected to Chat-GPT, and is part of a conversation with Chat-GPT.
+BIDARA is a GPT-4 chatbot that was instructed to help scientists and engineers understand, learn from, and emulate the strategies used by living things to create sustainable designs and technologies.
+
+![image](https://github.com/nasa-petal/discord_bot/assets/1322063/f5978e32-b5b3-4464-addb-d7d1294d1357)
+
+BIDARA can guide users through the Biomimicry Institute’s [Design Process](https://toolbox.biomimicry.org/methods/process/), a step-by-step method to propose biomimetic solutions to challenges. This process includes defining the problem, biologizing the challenge, discovering natural models, abstracting design strategies, and emulating nature's lessons.
+
 
 ### Use BIDARA in your own ChatGPT session
 
