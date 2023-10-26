@@ -1,7 +1,9 @@
 # BIDARA : Bio-Inspired Design and Research Assistant
 
 BIDARA is a bot that utilizes GPT-4 to answer questions.
-Each question you ask will be redirected to Chat-GPT, and is part of a conversation with Chat-GPT.
+Each question you ask will be redirected to ChatGPT, and is part of a conversation with ChatGPT.
+
+Try BIDARA [here](https://codepen.io/worldsenddunce/full/gOZXoEv) (more immersive website design in progress).
 
 ### Use BIDARA in your own ChatGPT session
 
