@@ -21,15 +21,12 @@ from functions import (
     patentSearch
 )
 
+# Store user info
+api_keys_dict = {'default' : config('OPENAI_API_KEY')} # Dictionary to keep track of all OpenAI API keys for every user
+research_space_dict = {} # Dictionary to keep track of users and their research spaces
+
 DISCORD_TOKEN = config('DISCORD_TOKEN')
-
-api_keys_dict = {'default' : config('OPENAI_API_KEY')} # Dictionary to keep track of all API keys
 openai.api_key = api_keys_dict['default']
-
-# Now using Llama 2 for research paper shenanigans
-embed_model = None
-service_context = None
-chat_engine = None
 
 intents = discord.Intents.default()
 # bot = commands.Bot(command_prefix='!', intents = intents)
@@ -46,7 +43,7 @@ class ChatBot(discord.Client):
 
     def __init__(self, intents):
         super().__init__(intents=intents)
-        # Delete folders starting with "citation"
+        # Delete folders starting with "citation" to clear up past research spaces
         delete_folders_starting_with("citation")
         # Empty the "pdfs" folder
         empty_folder("pdfs")
@@ -68,7 +65,7 @@ class ChatBot(discord.Client):
         self.default_sys = (
             "You are BIDARA, a biomimetic designer and research assistant, and a leading expert in biomimicry, biology, engineering, industrial design, environmental science, physiology, and paleontology. You were instructed by NASA's PeTaL project (https://www1.grc.nasa.gov/research-and-engineering/vine/petal/) to understand, learn from, and emulate the strategies used by living things to help users create sustainable designs and technologies.\n"+
 '\n'+
-"You can answer questions about papers, and after using setResearchSpace(), return the sources in the research space with corresponding links to pdfs and suggested user questions. When greeting the user, make sure to list the functions (i.e. patentSearch, generateImage) you have access to.\n" +
+"You can answer questions about papers, and after using setResearchSpace(), return the sources in the research space with corresponding links to pdfs and suggest questions for the user.\n" + # When greeting the user, make sure to list the functions (i.e. patentSearch, generateImage, etc.) you have access to.
 'Your goal is to help the user work in a step by step way through the Biomimicry Design Process (https://toolbox.biomimicry.org/methods/process/) to propose biomimetic solutions to a challenge. Cite peer reviewed sources for your information. Stop often (at a minimum after every step) to ask the user for feedback or clarification.\n'+
 '\n'+
 "1. Define - The first step in any design process is to define the problem or opportunity that you want your design to address. Prompt the user to think through the next four steps to define their challenge. Don't do this for them. You may offer suggestions if asked to.\n"+
@@ -248,7 +245,7 @@ class ChatBot(discord.Client):
         return wrapper
 
     @to_thread
-    def call_openai(self, messages):
+    def call_openai(self, messages, author):
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=messages,
@@ -278,6 +275,10 @@ class ChatBot(discord.Client):
                 function_response = function_to_call(
                     research_space_query=function_args.get("research_space_query"),
                 )
+                research_space = function_args.get("research_space_query")
+                if author in research_space_dict:
+                    delete_folders_starting_with(research_space_dict[author]) # Each person only gets one research space
+                research_space_dict[author] = "citation_" + research_space.lower().replace(" ", "_") + "_5_full_text_True"
             else:
                 function_response = function_to_call(
                     query=function_args.get("query"),
@@ -408,14 +409,17 @@ class ChatBot(discord.Client):
             if message.author in self.conversations:
                 # self.system_prompt_dict[message.author] = ""
                 self.conversations[message.author] = []
+                if message.author in research_space_dict: # Clear their research space if they've made one
+                    delete_folders_starting_with(research_space_dict[message.author])
+                    del research_space_dict[message.author]
                 await message.channel.send("Your previous conversation is cleared.")
         elif keyword == "examples":
             await self.send_msg(self.examples, message)
-        elif keyword == "setapikey": # Let the user set their own API key so that they're not leeching off of our resources
+        elif keyword == "setapikey": # Let the user set their own API key so that they're not leeching off of PeTaL resources
             await message.channel.send("**Enter your OpenAI API Key (starts with \"sk-\"— to get a key, go [here](<https://platform.openai.com/account/api-keys>)):**")
             def is_api_key_valid(msg):
                 self.settingCustomKey = True
-                api_keys_dict[message.author] = msg.content
+                api_keys_dict[message.author] = msg.content # Makes the API key user-specific
                 openai.api_key = api_keys_dict[message.author]
                 try:
                     response = openai.Completion.create(
@@ -442,6 +446,14 @@ class ChatBot(discord.Client):
         #         openai.api_key = api_keys_dict['default']
         #     await message.channel.send("**[DEBUGGING PURPOSES ONLY]** The current API Key is: " + openai.api_key)
         #     await message.channel.send(api_keys_dict)
+        elif keyword == "userinfo": # Debugging
+            await message.channel.send("**Research spaces:** " + str(research_space_dict))
+            conversation_history = str(self.conversations[message.author])
+            await message.channel.send("**Conversation History:** ")
+            # Specify the maximum chunk length
+            max_chunk_length = 2000 - len("**Conversation History:** ")
+            # Send the conversation history in chunks
+            await self.send_chunks(conversation_history, max_chunk_length, message)
         else:
             await message.channel.send("Not a valid commmand.")
 
@@ -490,14 +502,14 @@ class ChatBot(discord.Client):
             # Display Discord typing indicator
             if message.author in self.conversations and len(self.conversations[message.author]) > 10:  # Clearing oldest conversation memory, TODO: More systematic way to do this
                 # self.system_prompt_dict[message.author] = ""
-                self.conversations[message.author] = self.conversations[message.author][2:]
+                self.conversations[message.author] = self.conversations[message.author][:1] + self.conversations[message.author][5:] # Keep sys prompt (first index), clear two oldest exchanges
             async with message.channel.typing():
                 try:
                     if message.author in api_keys_dict: # Use the key provided by each user
                         openai.api_key = api_keys_dict[message.author]
                     else: # No key provided, use default key for now
                         openai.api_key = api_keys_dict['default']
-                    response = await self.call_openai(self.conversations[message.author]) # Try and fetch response from OpenAI
+                    response = await self.call_openai(self.conversations[message.author], message.author) # Try and fetch response from OpenAI
                 except:
                     await message.channel.send("ChatGPT experienced an error generating a response. ChatGPT may be currently overloaded with other requests. Retry again after a short wait. If that doesn't work, maybe your conversation has grown too large, try `!clearconv` to clear it, then try again. Conversations are limited to a maximum of about 6000 words.")
                 else:

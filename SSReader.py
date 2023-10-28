@@ -276,5 +276,4 @@ class SemanticScholarReader(BaseReader):
             documents.extend(full_text_documents)
 
         documents = get_unique_docs(documents)
-
-        return documents
+        return full_text_documents # Edited from documents

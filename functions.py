@@ -8,6 +8,9 @@ from utils import (
     generate_sample_questions,
     documents_to_df,
 )
+# Now using Llama 2 for research paper shenanigans
+chat_engine = None
+
 function_descriptions = [ # Self-explanatory functions for OpenAI function calling.
             {
                 "name": "paperSearch",
@@ -25,7 +28,8 @@ function_descriptions = [ # Self-explanatory functions for OpenAI function calli
             },
             {
                 "name": "setResearchSpace",
-                "description": "Only call this function when the user says 'Set research space to...' Creates a query engine the user can ask specific research questions with regard to papers in a research space. Run this before queryResearchSpace(). Return the sources in the research space with corresponding links and list of suggested questions to the user.",
+                "description": "Only call this function when the user says 'Set research space to...' Creates a query engine the user can ask specific research questions with regard to papers in a research space.\
+                               Run this before queryResearchSpace(). Return the sources in the research space with corresponding links and list of broad suggested questions to the user.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -39,7 +43,8 @@ function_descriptions = [ # Self-explanatory functions for OpenAI function calli
             },
             {
                 "name": "queryResearchSpace",
-                "description": "With regards to a specific research space (created by running setResearchSpace()) first), ask a specific question. Returns the answer according to the sources in the space. If the answer to the question is not directly provided, tell the user that the research space does not contain that information. Remember to cite your sources!",
+                "description": "With regards to a specific research space (created by running setResearchSpace()) first), ask a specific question. Returns the answer according to the sources in the space.\
+                               If the answer to the question is not directly provided, tell the user that the research space does not contain that information. Remember to cite your sources!",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -67,7 +72,7 @@ function_descriptions = [ # Self-explanatory functions for OpenAI function calli
             },
         {
             "name": "patentSearch",
-            "description": "Retrieves five patents and their links/thumbnails from Google Patents with a given query. Return this answer to the user verbatim.",
+            "description": "Retrieves the top patent results and their links/thumbnails from Google Patents with a given query. Return this answer to the user verbatim.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -81,7 +86,7 @@ function_descriptions = [ # Self-explanatory functions for OpenAI function calli
         }
         ]
 '''
-This function takes in a query (string) and returns a formatted string of five patents (including title, inventor, pdf, thumbnail) of
+This function takes in a query (string) and returns a formatted string of patents (including title, inventor, pdf, thumbnail) of
 the top results from Google Patents for that query.
 '''
 def patentSearch(query):
@@ -131,20 +136,21 @@ the user can ask more specific research questions to. Returns a string informing
 '''
 def setResearchSpace(research_space_query):
     global chat_engine
-    num_papers = 5 # Can increase num_papers later
+    num_papers = 5 # Can change this value (number of papers in research space)
     index, documents = create_index(
         research_space_query.lower(), num_papers, True
     )
     sample_questions = generate_sample_questions(documents)
     chat_engine = citation_query_engine(index, 10, False, 512)
+    # print(documents_to_df(documents).to_string())
     # for key, value in index.ref_doc_info.items():
     #     open_access_pdf = value.get('openAccessPdf')
     #     title = value['metadata']['title']
-    #
+    #     # authors = value['metadata']['authors']
     #     if open_access_pdf:
     #         print(f'Title: {title}')
     #         print(f'Open Access PDF Link: {open_access_pdf}')
-    #         print()
+    #         # print(f'Authors: {authors}')
     return "Research space successfully set to: " + "\"" + research_space_query + "\"" + "!\n" + "**Questions to consider:**\n" + sample_questions + "\n**Papers in Index:**\n" + documents_to_df(documents).to_string()
 
 def queryResearchSpace(query):
