@@ -10,6 +10,7 @@ from utils import (
 )
 # Now using Llama 2 for research paper shenanigans
 chat_engine = None
+research_space_dict = {} # Dictionary to keep track of users and their research spaces
 
 function_descriptions = [ # Self-explanatory functions for OpenAI function calling.
             {
@@ -141,6 +142,11 @@ def setResearchSpace(research_space_query):
         research_space_query.lower(), num_papers, True
     )
     sample_questions = generate_sample_questions(documents)
+
+    for key in research_space_dict:
+        if research_space_dict[key] == ["citation_" + research_space_query.lower().replace(" ", "_") + "_5_full_text_True"]:
+            for doc in documents:
+                research_space_dict[key].append(doc.metadata["paperId"])
     chat_engine = citation_query_engine(index, 10, False, 512)
     # print(documents_to_df(documents).to_string())
     # for key, value in index.ref_doc_info.items():

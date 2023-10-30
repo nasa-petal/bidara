@@ -274,6 +274,5 @@ class SemanticScholarReader(BaseReader):
             logging.info("Getting full text documents...")
             full_text_documents = self._get_full_text_docs(documents)
             documents.extend(full_text_documents)
-
         documents = get_unique_docs(documents)
         return full_text_documents # Edited from documents

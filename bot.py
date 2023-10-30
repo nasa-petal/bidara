@@ -1,4 +1,6 @@
 import json
+import os
+
 import discord
 import openai
 from decouple import config
@@ -9,10 +11,11 @@ from retrieval import intializeChain
 from agents import getTools, initAgent, convertAgentOutputToString
 # New, unorganized imports below
 from utils import (
-    delete_folders_starting_with,
+    delete_starting_with,
     empty_folder,
 )
 from functions import (
+    research_space_dict,
     function_descriptions,
     paperSearch,
     setResearchSpace,
@@ -23,7 +26,6 @@ from functions import (
 
 # Store user info
 api_keys_dict = {'default' : config('OPENAI_API_KEY')} # Dictionary to keep track of all OpenAI API keys for every user
-research_space_dict = {} # Dictionary to keep track of users and their research spaces
 
 DISCORD_TOKEN = config('DISCORD_TOKEN')
 openai.api_key = api_keys_dict['default']
@@ -44,7 +46,7 @@ class ChatBot(discord.Client):
     def __init__(self, intents):
         super().__init__(intents=intents)
         # Delete folders starting with "citation" to clear up past research spaces
-        delete_folders_starting_with("citation")
+        delete_starting_with("citation")
         # Empty the "pdfs" folder
         empty_folder("pdfs")
         self.settingCustomKey = False
@@ -272,13 +274,19 @@ class ChatBot(discord.Client):
                     prompt=function_args.get("prompt"),
                 )
             elif function_name == "setResearchSpace":
-                function_response = function_to_call(
-                    research_space_query=function_args.get("research_space_query"),
-                )
                 research_space = function_args.get("research_space_query")
-                if author in research_space_dict:
-                    delete_folders_starting_with(research_space_dict[author]) # Each person only gets one research space
-                research_space_dict[author] = "citation_" + research_space.lower().replace(" ", "_") + "_5_full_text_True"
+                function_response = function_to_call(
+                    research_space_query=research_space,
+                )
+                if author in research_space_dict:  # Clear their research space if they've made one
+                    for i in range(len(research_space_dict[author])):
+                        if i == 0:
+                            delete_starting_with(research_space_dict[author][i])
+                        else:
+                            delete_starting_with(research_space_dict[author][i], "pdfs")
+                research_space_dict[author] = [
+                    "citation_" + research_space.lower().replace(" ", "_") + "_5_full_text_True"]
+                print(research_space_dict[author][:])
             else:
                 function_response = function_to_call(
                     query=function_args.get("query"),
@@ -410,7 +418,11 @@ class ChatBot(discord.Client):
                 # self.system_prompt_dict[message.author] = ""
                 self.conversations[message.author] = []
                 if message.author in research_space_dict: # Clear their research space if they've made one
-                    delete_folders_starting_with(research_space_dict[message.author])
+                    for i in range(len(research_space_dict[message.author])):
+                        if i == 0:
+                            delete_starting_with(research_space_dict[message.author][i])
+                        else:
+                            delete_starting_with(research_space_dict[message.author][i], "pdfs")
                     del research_space_dict[message.author]
                 await message.channel.send("Your previous conversation is cleared.")
         elif keyword == "examples":

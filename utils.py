@@ -37,10 +37,16 @@ def documents_to_df(documents):
 
     df = pd.DataFrame(list_data)
     return df
-def delete_folders_starting_with(prefix):
-    for folder in os.listdir():
-        if os.path.isdir(folder) and folder.startswith(prefix):
-            shutil.rmtree(folder)
+def delete_starting_with(prefix, folder="."):
+    folder_path = os.path.join(os.getcwd(), folder)  # Get the full path to the folder
+
+    for item in os.listdir(folder_path):
+        item_path = os.path.join(folder_path, item)  # Get the full path to the item
+
+        if os.path.isdir(item_path) and item.startswith(prefix):
+            shutil.rmtree(item_path)  # Delete the folder
+        elif os.path.isfile(item_path) and item.startswith(prefix):
+            os.remove(item_path)  # Delete the file
 
 def empty_folder(folder_name):
     if os.path.exists(folder_name):
