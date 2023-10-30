@@ -1,4 +1,4 @@
-# <img src="https://github.com/nasa-petal/discord_bot/assets/1322063/c34b5526-7186-43fc-b00a-597ee773ca7b" width="40" align="left"/> BIDARA : Bio-Inspired Design and Research Assistant
+## <img src="https://github.com/nasa-petal/discord_bot/assets/1322063/c34b5526-7186-43fc-b00a-597ee773ca7b" width="40" align="left"/> BIDARA : Bio-Inspired Design and Research Assistant
 
 <img src="https://github.com/nasa-petal/discord_bot/assets/1322063/f5978e32-b5b3-4464-addb-d7d1294d1357" width="400" align="right"/>
 <p style="font-size:1.3em;font-weight:200">BIDARA is a GPT-4 chatbot that was instructed to help scientists and engineers understand, learn from, and emulate the strategies used by living things to create sustainable designs and technologies.</p>
