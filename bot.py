@@ -205,7 +205,6 @@ class ChatBot(discord.Client):
         #               llm,
         #               agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION)
         #     print(agent.agent.llm_chain.prompt.messages[0].prompt.template)
-
         # One tool, one loop for debugging
         self.agent_sys = (
                         "You are BIDARA, a biomimetic designer and research assistant, and a leading expert in biomimicry, biology, engineering, industrial design, environmental science, physiology, and paleontology. Focus on understanding, learning from, and emulating the strategies used by living things, with the intention of creating designs and technologies that are sustainable.\n\n"
@@ -224,6 +223,8 @@ class ChatBot(discord.Client):
         self.custom_sys = False
 
         self.agent = initAgent(getTools())
+        self.agent_sys = self.agent.agent.llm_chain.prompt.template
+
     async def on_ready(self):
         print(f'{self.user} is connected to Discord')
 
@@ -531,16 +532,16 @@ class ChatBot(discord.Client):
             return
 
         if self.system_prompt_dict[message.author] == self.retrieval_sys:
-            await self.send_msg("Processing...", message)
-            response = await self.send_agent_msg(message.content, message)
-            await self.send_msg(response['biologize_abstract_retrieved_paper'] + response['discover_abstract_answer'], message)
+            async with message.channel.typing():
+                response = await self.send_agent_msg(message.content, message)
+                await self.send_msg(response['biologize_abstract_retrieved_paper'] + response['discover_abstract_answer'], message)
+
             return
 
         if self.system_prompt_dict[message.author] == self.agent_sys:
-            await self.send_msg("Agent is processing...", message)
-            response = await self.send_agent_msg(message.content, message)
-            print(response)
-            await self.send_msg(response, message)
+            async with message.channel.typing():
+                response = await self.send_agent_msg(message.content, message)
+                await self.send_msg(response, message)
 
             return
 
