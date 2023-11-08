@@ -222,8 +222,8 @@ class ChatBot(discord.Client):
 
         self.custom_sys = False
 
-        self.agent = initAgent(getTools())
-        self.agent_sys = self.agent.agent.llm_chain.prompt.template
+        # self.agent = initAgent(getTools())
+        # self.agent_sys = self.agent.agent.llm_chain.prompt.template
 
     async def on_ready(self):
         print(f'{self.user} is connected to Discord')
