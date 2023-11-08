@@ -45,6 +45,17 @@ client = discord.Client(command_prefix='!', intents=intents)
 intents.message_content = True
 
 
+class APIKeyForm(ui.Modal, title='API Key Setup'):
+    key = ui.TextInput(label='Enter your OpenAI API Key (sk-):')
+
+    async def on_submit(self, interaction: discord.Interaction):
+        api_keys_dict[interaction.user] = self.key
+        if is_api_key_valid(self.key):
+            await interaction.response.send_message('OpenAI API Key Set!', ephemeral=True)
+        else:
+            await interaction.response.send_message(
+                "This API key does not work. Could it be that you've mistyped the key or hit your usage limit?",
+                ephemeral=True)
 class ChatBot(discord.Client):
 
     def __init__(self, intents):
@@ -53,7 +64,6 @@ class ChatBot(discord.Client):
         delete_starting_with("citation")
         # Empty the "pdfs" folder
         empty_folder("pdfs")
-        self.settingCustomKey = False
         self.system_prompt_dict = {}
         self.conversations = {}
         self.bda_sys = ("You are BIDARA, a biomimetic designer and research assistant, and a leading expert in biomimicry, biology, engineering, industrial design, environmental science, physiology, and paleontology. Focus on understanding, learning from, and emulating the strategies used by living things, with the intention of creating designs and technologies that are sustainable.\n\n"
@@ -214,7 +224,6 @@ class ChatBot(discord.Client):
         self.custom_sys = False
 
         self.agent = initAgent(getTools())
-
     async def on_ready(self):
         print(f'{self.user} is connected to Discord')
 
@@ -396,21 +405,12 @@ class ChatBot(discord.Client):
             await message.channel.send(role + ": " + content)
 
     async def process_keyword(self, keyword, message):
-        class APIKeyForm(ui.Modal, title='API Key Setup'):
-            key = ui.TextInput(label='Enter your OpenAI API Key (sk-):')
-
-            async def on_submit(self, interaction: discord.Interaction):
-                api_keys_dict[message.author] = self.key
-                if is_api_key_valid(self.key):
-                    await interaction.response.send_message('OpenAI API Key Set!', ephemeral=True)
-                else:
-                    await interaction.response.send_message("This API key does not work. Could it be that you've mistyped the key or hit your usage limit?", ephemeral=True)
-                self.settingCustomKey = False
         class Button(discord.ui.View):
-            def __init__(self):
+            def __init__(self, user):
                 super().__init__(timeout=86400)
                 self.disabled = False
-                self.user = None
+                self.user = user
+
             @discord.ui.button(label="Set API Key", style=discord.ButtonStyle.green)
             async def button(self, interaction: discord.Interaction, button: discord.ui.Button):
                 if interaction.user == self.user:
@@ -418,7 +418,9 @@ class ChatBot(discord.Client):
                         await interaction.response.send_modal(APIKeyForm())
                         self.disabled = True
                     else:
-                        await interaction.response.send_message("This button has already been clicked. Use `!setapikey` to generate a new button.", ephemeral=True)
+                        await interaction.response.send_message(
+                            "This button has already been clicked. Use `!setapikey` to generate a new button.",
+                            ephemeral=True)
         if keyword == "help":
             await self.send_msg(self.instructions, message)
         elif keyword == "mode":
@@ -496,7 +498,7 @@ class ChatBot(discord.Client):
             await self.send_chunks(conversation_history, max_chunk_length, message)
         elif keyword == "setapikey": # Let the user set their own API key so that they're not leeching off of PeTaL resources
             # If the user enters "report", show the Report view
-            view = Button()
+            view = Button(message.author)
             msg = await message.channel.send("**Click on the button to set your OpenAI API Key:**", view=view)
             view.message = msg
             view.user = message.author
@@ -566,7 +568,6 @@ class ChatBot(discord.Client):
 
                 self.conversations[message.author].append(
                     {'role': 'assistant', 'content': assistant_response})
-
                 await self.send_msg(assistant_response, message)
 
 

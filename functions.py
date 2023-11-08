@@ -11,6 +11,7 @@ from utils import (
 # Now using Llama 2 for research paper shenanigans
 chat_engine = None
 research_space_dict = {} # Dictionary to keep track of users and their research spaces
+# cur_step = None
 
 function_descriptions = [ # Self-explanatory functions for OpenAI function calling.
             {
@@ -84,8 +85,26 @@ function_descriptions = [ # Self-explanatory functions for OpenAI function calli
                 },
                 "required": ["query"],
             },
-        }
+        },
+    #     {
+    #         "name": "setStep",
+    #         "description": "Set step state variable to one of define, biologize, discover, abstract, or emulate. Call this function while executing the associated step only if you are BIDARA.",
+    #         "parameters": {
+    #             "type": "object",
+    #             "properties": {
+    #                 "step": {
+    #                     "type": "string",
+    #                     "description": "One of define, biologize, discover, abstract, or emulate (all lowercase).",
+    #                 },
+    #             },
+    #             "required": ["query"],
+    #         }
+    # }
         ]
+
+# def setStep(step):
+#     cur_step = step
+
 '''
 This function takes in a query (string) and returns a formatted string of patents (including title, inventor, pdf, thumbnail) of
 the top results from Google Patents for that query.
@@ -121,7 +140,6 @@ def generateImage(prompt):
     # Generate an image
     response = openai.Image.create(
         prompt=prompt,
-        model="image-alpha-001",
         size="512x512",
         response_format="url"
     )
