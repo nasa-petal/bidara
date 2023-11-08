@@ -10,11 +10,10 @@ from decouple import config
 from retrieval import SemanticScholarSearch
 
 
-OPEN_API_KEY = config('OPENAI_API_KEY')
-chat_llm = ChatOpenAI(model="gpt-4",  temperature=0,
-                      openai_api_key=OPEN_API_KEY)
-SEMANTIC_SCHOLAR_API_KEY = config('SEMANTIC_SCHOLAR_API_KEY')
+OPENAI_API_KEY = config('OPENAI_API_KEY')
+chat_llm = ChatOpenAI(model_name='gpt-4', temperature=0, openai_api_key=OPENAI_API_KEY)
 
+SEMANTIC_SCHOLAR_API_KEY = config('SEMANTIC_SCHOLAR_API_KEY')
 
 def simpleSearchQueryExecutor(inputs: dict) -> dict:
     response = SemanticScholarSearch(inputs['question'], 2)
@@ -22,21 +21,11 @@ def simpleSearchQueryExecutor(inputs: dict) -> dict:
 
 
 def getTools():
-    biologize = LLMChain(llm=chat_llm,
+    gpt = LLMChain(llm=chat_llm,
                          prompt=PromptTemplate(input_variables=['question'],
-                                               template="Analyze the essential functions and context your design challenge \
-                   must address. Reframe them in biological terms, so that you can “ask nature” for advice. \
-                   The goal of this step is to arrive at one or more “How does nature…?” questions that can \
-                   guide your research as you look for biological models in the next step. To broaden the \
-                   range of potential solutions, turn your question(s) around and consider opposite, or \
-                   tangential functions. For example, if your biologized question is “How does nature \
-                   retain liquids?”, you could also ask “How does nature repel liquids?” because similar \
-                   mechanisms could be at work in both scenarios (i.e. controlling the movement of a liquid). \
-                   Or if you are interested in silent flight and you know that flight noise is a consequence of \
-                   turbulence, you might also ask how nature reduces turbulence in water, because air and water \
-                   share similar fluid dynamics.\n {question}")
+                                               template="Respond normally. \n {question}"
+                                                        )
                          )
-
     discover = LLMChain(llm=chat_llm,
                         prompt=PromptTemplate(input_variables=['question'],
                                               template="Look for natural models (organisms and ecosystems) that \
@@ -94,37 +83,47 @@ def getTools():
 
     tools = [
         Tool.from_function(
-            func=emulate.run,
-            name="Emulate",
-            description="Look for patterns and relationships among the strategies you found and hone in on\
-            the key lessons that should inform your solution. Develop design concepts based on these strategies."
+            func=gpt.run,
+            name="GPT",
+            description="This tool gives a normal, FINAL ANSWER response to the user."
         ),
         Tool.from_function(
-            func=evaluate.run,
-            name="Evaluate",
-            description="Assess the design concept(s) for how well they meet the criteria and constraints of \
-            the design challenge and fit into Earth’s systems. Consider technical and business model feasibility. \
-            Refine and revisit previous steps as needed to produce a viable solution."
+            func=biomimicry.run,
+            name="Biomimicry",
+            description="Work through the biomimicry design steps one per response to user."
         ),
-        Tool.from_function(
-            func=biologize.run,
-            name="Biologize",
-            description="Analyze the essential functions and context your design solution must address. \
-            Reframe them in biological terms, so that you can “ask nature” for advice."
-        ),
-        Tool.from_function(
-            func=discover.run,
-            name="Discover",
-            description="Look for natural models (organisms and ecosystems) that need to address the same \
-            functions and context as the design solution. Identify the strategies used that support their \
-            survival and success."
-        ),
-        Tool.from_function(
-            func=abstract.run,
-            name="Abstract",
-            description="Carefully study the essential features or mechanisms that make the biological strategies \
-            successful. Restate them in non-biological terms, as “design strategies.”"
-        ),
+        # Tool.from_function(
+        #     func=emulate.run,
+        #     name="Emulate",
+        #     description="Look for patterns and relationships among the strategies you found and hone in on\
+        #     the key lessons that should inform your solution. Develop design concepts based on these strategies."
+        # ),
+        # Tool.from_function(
+        #     func=evaluate.run,
+        #     name="Evaluate",
+        #     description="Assess the design concept(s) for how well they meet the criteria and constraints of \
+        #     the design challenge and fit into Earth’s systems. Consider technical and business model feasibility. \
+        #     Refine and revisit previous steps as needed to produce a viable solution."
+        # ),
+        # Tool.from_function(
+        #     func=biologize.run,
+        #     name="Biologize",
+        #     description="Analyze the essential functions and context your design solution must address. \
+        #     Reframe them in biological terms, so that you can “ask nature” for advice."
+        # ),
+        # Tool.from_function(
+        #     func=discover.run,
+        #     name="Discover",
+        #     description="Look for natural models (organisms and ecosystems) that need to address the same \
+        #     functions and context as the design solution. Identify the strategies used that support their \
+        #     survival and success."
+        # ),
+        # Tool.from_function(
+        #     func=abstract.run,
+        #     name="Abstract",
+        #     description="Carefully study the essential features or mechanisms that make the biological strategies \
+        #     successful. Restate them in non-biological terms, as “design strategies.”"
+        # ),
         Tool.from_function(
             func=retriever.run,
             name="Paper Retrieval",

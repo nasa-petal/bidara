@@ -1,1 +1,9 @@
 .env
+sandbox.py
+ScholarQA.py
+
+
+.idea/
+__pycache__/
+citation*
+pdfs/
