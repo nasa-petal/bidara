@@ -1,5 +1,6 @@
 import json
 import os
+import traceback
 
 import discord
 import openai
@@ -13,6 +14,7 @@ from agents import getTools, initAgent, convertAgentOutputToString
 from utils import (
     delete_starting_with,
     empty_folder,
+    is_api_key_valid
 )
 from functions import (
     research_space_dict,
@@ -23,12 +25,14 @@ from functions import (
     generateImage,
     patentSearch
 )
+from discord import ui, app_commands
+TEST_GUILD = discord.Object(0)
 
 # Store user info
-api_keys_dict = {'default' : config('OPENAI_API_KEY')} # Dictionary to keep track of all OpenAI API keys for every user
+api_keys_dict = {} # {'default' : config('OPENAI_API_KEY')} # Dictionary to keep track of all OpenAI API keys for every user
 
 DISCORD_TOKEN = config('DISCORD_TOKEN')
-openai.api_key = api_keys_dict['default']
+# openai.api_key = api_keys_dict['default']
 
 intents = discord.Intents.default()
 # bot = commands.Bot(command_prefix='!', intents = intents)
@@ -40,6 +44,7 @@ client = discord.Client(command_prefix='!', intents=intents)
 # turn off messages from guilds, so you only get messages from DM channels
 # intents.guild_messages = False
 intents.message_content = True
+
 
 class ChatBot(discord.Client):
 
@@ -392,6 +397,24 @@ class ChatBot(discord.Client):
             await message.channel.send(role + ": " + content)
 
     async def process_keyword(self, keyword, message):
+        class APIKeyForm(ui.Modal, title='API Key Setup'):
+            key = ui.TextInput(label='Enter your OpenAI API Key (sk-):')
+
+            async def on_submit(self, interaction: discord.Interaction):
+                api_keys_dict[message.author] = self.key
+                if is_api_key_valid(self.key):
+                    await interaction.response.send_message('OpenAI API Key Set!', ephemeral=True)
+                else:
+                    await interaction.response.send_message("This API key does not work. Could it be that you've mistyped the key or hit your usage limit?", ephemeral=True)
+                self.settingCustomKey = False
+        class Button(discord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=86400)
+                self.value = None
+
+            @discord.ui.button(label="Set API Key", style=discord.ButtonStyle.green)
+            async def button(self, interaction: discord.Interaction, button: discord.ui.Button):
+                await interaction.response.send_modal(APIKeyForm())
         if keyword == "help":
             await self.send_msg(self.instructions, message)
         elif keyword == "mode":
@@ -427,30 +450,30 @@ class ChatBot(discord.Client):
                 await message.channel.send("Your previous conversation is cleared.")
         elif keyword == "examples":
             await self.send_msg(self.examples, message)
-        elif keyword == "setapikey": # Let the user set their own API key so that they're not leeching off of PeTaL resources
-            await message.channel.send("**Enter your OpenAI API Key (starts with \"sk-\"— to get a key, go [here](<https://platform.openai.com/account/api-keys>)):**")
-            def is_api_key_valid(msg):
-                self.settingCustomKey = True
-                api_keys_dict[message.author] = msg.content # Makes the API key user-specific
-                openai.api_key = api_keys_dict[message.author]
-                try:
-                    response = openai.Completion.create(
-                        model="text-davinci-002",
-                        prompt="This is a test.",
-                        temperature=0
-                    )
-                except:
-                    return False
-                else:
-                    return True
-
-            msg = await client.wait_for("message")
-            if is_api_key_valid(msg):
-                await message.channel.send("OpenAI API key set!")
-                await msg.delete()
-            else:
-                await message.channel.send("This API key does not work. Could it be that you've mistyped the key or hit your usage limit?")
-            self.settingCustomKey = False
+        # elif keyword == "setapikey": [OLD]
+        #     await message.channel.send("**Enter your OpenAI API Key (starts with \"sk-\"— to get a key, go [here](<https://platform.openai.com/account/api-keys>)):**")
+        #     def is_api_key_valid(msg):
+        #         self.settingCustomKey = True
+        #         api_keys_dict[message.author] = msg.content # Makes the API key user-specific
+        #         openai.api_key = api_keys_dict[message.author]
+        #         try:
+        #             response = openai.Completion.create(
+        #                 model="text-davinci-002",
+        #                 prompt="This is a test.",
+        #                 temperature=0
+        #             )
+        #         except:
+        #             return False
+        #         else:
+        #             return True
+        #
+        #     msg = await client.wait_for("message")
+        #     await msg.delete()
+        #     if is_api_key_valid(msg):
+        #         await message.channel.send("OpenAI API key set!")
+        #     else:
+        #         await message.channel.send("This API key does not work. Could it be that you've mistyped the key or hit your usage limit?")
+        #     self.settingCustomKey = False
         # elif keyword == "curkey":
         #     if message.author in api_keys_dict:  # Use the key provided by each user
         #         openai.api_key = api_keys_dict[message.author]
@@ -459,6 +482,7 @@ class ChatBot(discord.Client):
         #     await message.channel.send("**[DEBUGGING PURPOSES ONLY]** The current API Key is: " + openai.api_key)
         #     await message.channel.send(api_keys_dict)
         elif keyword == "userinfo": # Debugging
+            await message.channel.send("**API Keys:** " + str(api_keys_dict)) # This does not display the key, only the object associated with it
             await message.channel.send("**Research spaces:** " + str(research_space_dict))
             conversation_history = str(self.conversations[message.author])
             await message.channel.send("**Conversation History:** ")
@@ -466,6 +490,12 @@ class ChatBot(discord.Client):
             max_chunk_length = 2000 - len("**Conversation History:** ")
             # Send the conversation history in chunks
             await self.send_chunks(conversation_history, max_chunk_length, message)
+        elif keyword == "setapikey": # Let the user set their own API key so that they're not leeching off of PeTaL resources
+            # If the user enters "report", show the Report view
+            view = Button()
+            msg = await message.channel.send("**Click on the button to set your OpenAI API Key:**", view=view)
+            view.message = msg
+            await msg.edit(view=view)
         else:
             await message.channel.send("Not a valid commmand.")
 
@@ -497,7 +527,6 @@ class ChatBot(discord.Client):
             await self.send_msg("Processing...", message)
             response = await self.send_agent_msg(message.content, message)
             await self.send_msg(response['biologize_abstract_retrieved_paper'] + response['discover_abstract_answer'], message)
-
             return
 
         if self.system_prompt_dict[message.author] == self.agent_sys:
@@ -510,27 +539,30 @@ class ChatBot(discord.Client):
 
         self.get_chatgpt_messages(input_content, message.author)
 
-        if not self.settingCustomKey:  # Don't want to go through this when setting a custom key
-            # Display Discord typing indicator
-            if message.author in self.conversations and len(self.conversations[message.author]) > 10:  # Clearing oldest conversation memory, TODO: More systematic way to do this
-                # self.system_prompt_dict[message.author] = ""
-                self.conversations[message.author] = self.conversations[message.author][:1] + self.conversations[message.author][5:] # Keep sys prompt (first index), clear two oldest exchanges
-            async with message.channel.typing():
-                try:
-                    if message.author in api_keys_dict: # Use the key provided by each user
-                        openai.api_key = api_keys_dict[message.author]
-                    else: # No key provided, use default key for now
-                        openai.api_key = api_keys_dict['default']
-                    response = await self.call_openai(self.conversations[message.author], message.author) # Try and fetch response from OpenAI
-                except:
+        # if not self.settingCustomKey:  # Don't want to go through this when setting a custom key
+        # Display Discord typing indicator
+        if message.author in self.conversations and len(self.conversations[message.author]) > 10:  # Clearing oldest conversation memory, TODO: More systematic way to do this
+            # self.system_prompt_dict[message.author] = ""
+            self.conversations[message.author] = self.conversations[message.author][:1] + self.conversations[message.author][5:] # Keep sys prompt (first index), clear two oldest exchanges
+        async with message.channel.typing():
+            try:
+                if message.author in api_keys_dict: # Use the key provided by each user
+                    openai.api_key = api_keys_dict[message.author]
+                else: # No key provided, tell them they have to set it
+                    openai.api_key = "invalid"
+                    await message.channel.send("You haven't set an OpenAI API key yet. Use `!setapikey` to enter your API key, which can be found [here](<https://platform.openai.com/account/api-keys>).")
+                # openai.api_key = api_keys_dict['default']
+                response = await self.call_openai(self.conversations[message.author], message.author) # Try and fetch response from OpenAI
+            except:
+                if message.author in api_keys_dict:
                     await message.channel.send("ChatGPT experienced an error generating a response. ChatGPT may be currently overloaded with other requests. Retry again after a short wait. If that doesn't work, maybe your conversation has grown too large, try `!clearconv` to clear it, then try again. Conversations are limited to a maximum of about 6000 words.")
-                else:
-                    assistant_response = response['choices'][0]['message']['content']
+            else:
+                assistant_response = response['choices'][0]['message']['content']
 
-                    self.conversations[message.author].append(
-                        {'role': 'assistant', 'content': assistant_response})
+                self.conversations[message.author].append(
+                    {'role': 'assistant', 'content': assistant_response})
 
-                    await self.send_msg(assistant_response, message)
+                await self.send_msg(assistant_response, message)
 
 
 client = ChatBot(intents=intents)

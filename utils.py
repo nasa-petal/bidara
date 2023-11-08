@@ -24,11 +24,23 @@ import shutil
 from llama_index.retrievers import BM25Retriever
 from decouple import config
 import pandas as pd
-
+import openai
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
 
+def is_api_key_valid(key):
+    openai.api_key = key
+    try:
+        response = openai.Completion.create(
+            model="text-davinci-002",
+            prompt="This is a test.",
+            temperature=0
+        )
+    except:
+        return False
+    else:
+        return True
 def documents_to_df(documents):
     # convert document objects to dataframe
     list_data = []
