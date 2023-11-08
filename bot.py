@@ -26,7 +26,6 @@ from functions import (
     patentSearch
 )
 from discord import ui, app_commands
-TEST_GUILD = discord.Object(0)
 
 # Store user info
 api_keys_dict = {} # {'default' : config('OPENAI_API_KEY')} # Dictionary to keep track of all OpenAI API keys for every user
@@ -35,8 +34,8 @@ DISCORD_TOKEN = config('DISCORD_TOKEN')
 # openai.api_key = api_keys_dict['default']
 
 intents = discord.Intents.default()
-# bot = commands.Bot(command_prefix='!', intents = intents)
 
+# bot = commands.Bot(command_prefix='!', intents = intents)
 client = discord.Client(command_prefix='!', intents=intents)
 
 # intents.messages = True
@@ -410,11 +409,16 @@ class ChatBot(discord.Client):
         class Button(discord.ui.View):
             def __init__(self):
                 super().__init__(timeout=86400)
-                self.value = None
-
+                self.disabled = False
+                self.user = None
             @discord.ui.button(label="Set API Key", style=discord.ButtonStyle.green)
             async def button(self, interaction: discord.Interaction, button: discord.ui.Button):
-                await interaction.response.send_modal(APIKeyForm())
+                if interaction.user == self.user:
+                    if self.disabled == False:
+                        await interaction.response.send_modal(APIKeyForm())
+                        self.disabled = True
+                    else:
+                        await interaction.response.send_message("This button has already been clicked. Use `!setapikey` to generate a new button.", ephemeral=True)
         if keyword == "help":
             await self.send_msg(self.instructions, message)
         elif keyword == "mode":
@@ -495,6 +499,7 @@ class ChatBot(discord.Client):
             view = Button()
             msg = await message.channel.send("**Click on the button to set your OpenAI API Key:**", view=view)
             view.message = msg
+            view.user = message.author
             await msg.edit(view=view)
         else:
             await message.channel.send("Not a valid commmand.")
