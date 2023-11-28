@@ -212,7 +212,7 @@ class ChatBot(discord.Client):
     @to_thread
     def call_openai(self, messages):
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4-1106-preview",
             messages=messages,
             temperature=0
         )
