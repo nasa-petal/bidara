@@ -6,7 +6,7 @@
 
 BIDARA can guide users through the Biomimicry Institute’s [Design Process](https://toolbox.biomimicry.org/methods/process/), a step-by-step method to propose biomimetic solutions to challenges. This process includes defining the problem, biologizing the challenge, discovering natural models, abstracting design strategies, and emulating nature's lessons.
 
-### :rocket: [Try it online!](https://github.com/nasa-petal/bidara-deep-chat#rocket-how-to-access)
+### :rocket: [Try it online!](https://nasa-petal.github.io/bidara-deep-chat/)
 <br clear="both" />
 
 ### Use BIDARA in your own ChatGPT session
