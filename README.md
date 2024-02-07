@@ -9,7 +9,7 @@ BIDARA can guide users through the Biomimicry Institute’s [Design Process](htt
 ### BIDARA moved to the web 🧳
 
 The web version is under active development and currently has more features than this Discord version.
-### :rocket: [Try the web version](https://nasa-petal.github.io/bidara-deep-chat/) &nbsp; :octocat: [See the repo](https://github.com/nasa-peta/bidara-deep-chat/)
+### :rocket: [Try the web version](https://nasa-petal.github.io/bidara-deep-chat/) &nbsp; :octocat: [See the repo](https://github.com/nasa-petal/bidara-deep-chat/)
 <br clear="both" />
 
 ### Use BIDARA in your own ChatGPT session
